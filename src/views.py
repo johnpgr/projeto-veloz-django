@@ -1,13 +1,15 @@
-from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.http import HttpResponseRedirect
-from .models import Product, Sale
-from .forms import ProductForm, SaleForm
+from django.urls import reverse_lazy
+from django.views.generic import DeleteView, ListView, CreateView, UpdateView
+from .forms import *
+from .models import *
 
+# Product Views
 class ProductListView(ListView):
     model = Product
     template_name = 'product_list.html'
     context_object_name = 'products'
+    paginate_by = 10
 
 class ProductCreateView(CreateView):
     model = Product
@@ -26,18 +28,18 @@ class ProductDeleteView(DeleteView):
     template_name = 'product_confirm_delete.html'
     success_url = reverse_lazy('product-list')
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         if request.headers.get('HX-Request'):
+            print("HX-Request detected")
             return self.render_to_response(context)
         return HttpResponseRedirect(self.success_url)
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self):
         self.object = self.get_object()
-        success_url = self.get_success_url()
         self.object.delete()
-        return HttpResponseRedirect(success_url)
+        return HttpResponseRedirect(self.get_success_url())
 
 # Sale Views
 class SaleListView(ListView):
@@ -51,12 +53,12 @@ class SaleCreateView(CreateView):
     template_name = 'sale_form.html'
     success_url = reverse_lazy('sale-list')
 
-    def form_valid(self, form):
+    def form_valid(self, form: SaleForm):
         sale = form.save(commit=False)
         product = sale.product
         if product.stock >= sale.quantity:
             product.stock -= sale.quantity
             product.save()
             return super().form_valid(form)
-        form.add_error('quantity', 'Not enough stock available')
+        form.add_error('quantity', 'Quantia excede o estoque disponível.')
         return self.form_invalid(form)

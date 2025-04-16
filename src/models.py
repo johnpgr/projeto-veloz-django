@@ -39,5 +39,3 @@ class Sale(models.Model):
 
     def __str__(self) -> str:
         return f"Sale of {self.product.name} - Qty: {self.quantity}"
-
-
