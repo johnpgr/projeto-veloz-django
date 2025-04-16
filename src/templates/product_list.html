@@ -1,60 +1,83 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="card-title text-2xl">produtos</h2>
-                <a href="{% url 'product-create' %}" class="btn btn-primary">novo produto</a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th class="bg-base-200">nome</th>
-                            <th class="bg-base-200">sku</th>
-                            <th class="bg-base-200">preço</th>
-                            <th class="bg-base-200">estoque</th>
-                            <th class="bg-base-200">ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr class="hover">
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.sku }}</td>
-                            <td>${{ product.price }}</td>
-                            <td>{{ product.stock }}</td>
-                            <td>
-                                <div class="flex space-x-2">
-                                    <a href="{% url 'product-update' product.pk %}" class="btn btn-sm btn-warning">editar</a>
-                                    <button hx-get="{% url 'product-delete' product.pk %}"
-                                            hx-target="#modal-container"
-                                            hx-swap="innerhtml"
-                                            class="btn btn-sm btn-error">
-                                        deletar
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% if is_paginated %}
-            <div class="join flex justify-center mt-4">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1" class="join-item btn btn-neutral">&laquo; primeira</a>
-                    <a href="?page={{page_obj.previous_page_number}}" class="join-item btn btn-neutral">anterior</a>
-                {% endif %}
-                <button class="join-item btn btn-disabled">página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
-                {% if page_obj.has_next %}
-                    <a href="?page={{page_obj.next_page_number}}" class="join-item btn btn-neutral">próxima</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}" class="join-item btn btn-neutral">ultima &raquo;</a>
-                {% endif %}
-            </div>
+<div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="card-title text-2xl">Produtos</h2>
+            <a href="{% url 'product-create' %}" class="btn btn-primary">Novo produto</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="bg-base-200">Nome</th>
+                        <th class="bg-base-200">SKU</th>
+                        <th class="bg-base-200">Preço</th>
+                        <th class="bg-base-200">Estoque</th>
+                        <th class="bg-base-200">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="{% cycle 'bg-base-100' 'bg-base-200' %}">
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.sku }}</td>
+                        <td>${{ product.price }}</td>
+                        <td>{{ product.stock }}</td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <a 
+                                    aria-label="Editar produto"
+                                    href="{% url 'product-update' product.pk %}"
+                                    class="btn btn-outline btn-xs"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen">
+                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path
+                                            d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                                    </svg>
+                                </a>
+                                <button 
+                                    type="button"
+                                    aria-label="Deletar produto"
+                                    hx-get="{% url 'product-delete' product.pk %}"
+                                    hx-target="#modal-container"
+                                    hx-swap="innerHTML" class="btn btn-primary btn-xs"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2">
+                                        <path d="M3 6h18" />
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        <line x1="10" x2="10" y1="11" y2="17" />
+                                        <line x1="14" x2="14" y1="11" y2="17" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="join flex justify-center mt-4">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="join-item btn btn-neutral">&laquo; Primeira</a>
+                <a href="?page={{page_obj.previous_page_number}}" class="join-item btn btn-neutral">Anterior</a>
+            {% endif %}
+            <button class="join-item btn btn-disabled">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
+            {% if page_obj.has_next %}
+                <a href="?page={{page_obj.next_page_number}}" class="join-item btn btn-neutral">Próxima</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="join-item btn btn-neutral">Ultima &raquo;</a>
             {% endif %}
         </div>
+        {% endif %}
     </div>
-    <div id="modal-container"></div>
+</div>
+<div id="modal-container"></div>
 {% endblock %}

@@ -1,6 +1,6 @@
+src/static/css/styles.css
 env/
 .env
 **/*.pyc
 node_modules/
-./src/static/css/styles.css
 .llm/

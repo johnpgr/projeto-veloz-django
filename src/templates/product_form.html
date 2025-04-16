@@ -8,11 +8,11 @@
     <form method="post">
         {% csrf_token %}
         {% for field in form %}
-        <div class="mb-4 form-control w-full">
+        <div class="mb-4 flex flex-col w-full gap-1">
             <label class="label">
                 <span class="label-text">{{ field.label }}</span>
             </label>
-            {{ field|addclass:"input input-bordered w-full" }}
+            {{ field }}
             {% if field.errors %}
             <label class="label">
                 <span class="label-text-alt text-red-500">{{ field.errors|striptags }}</span>
@@ -21,10 +21,8 @@
         </div>
         {% endfor %}
         <div class="flex justify-end space-x-2">
-            <button type="submit"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">Save</button>
-            <a href="{% url 'product-list' %}"
-                class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md">Cancel</a>
+            <a href="{% url 'product-list' %}" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar</button>
         </div>
     </form>
 </div>

@@ -7,7 +7,15 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ['name', 'description', 'price', 'sku', 'stock', 'is_active']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'name': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
+            'description': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full',
+                'rows': 3
+            }),
+            'price': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
+            'sku': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
+            'stock': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'toggle toggle-primary'}),
         }
         labels = {
             'name': 'Nome',
@@ -22,6 +30,10 @@ class SaleForm(forms.ModelForm):
     class Meta:
         model = Sale
         fields = ['product', 'quantity']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'select select-bordered w-full'}),
+            'quantity': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
+        }
         labels = {
             'product': 'Produto',
             'quantity': 'Quantidade',

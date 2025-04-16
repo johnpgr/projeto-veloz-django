@@ -38,15 +38,14 @@ class ProductDeleteView(DeleteView):
     template_name = 'product_confirm_delete.html'
     success_url = reverse_lazy('product-list')
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         if request.headers.get('HX-Request'):
-            print("HX-Request detected")
             return self.render_to_response(context)
         return HttpResponseRedirect(self.success_url)
 
-    def delete(self):
+    def delete(self, selft, *args, **kwargs):
         self.object = self.get_object()
         self.object.delete()
         return HttpResponseRedirect(self.get_success_url())
