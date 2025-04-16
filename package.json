@@ -1,0 +1,11 @@
+{
+    "scripts": {
+        "css:build": "npx @tailwindcss/cli -i src/static/css/input.css -o src/static/css/styles.css --minify",
+        "css:watch": "npx @tailwindcss/cli -i src/static/css/input.css -o src/static/css/styles.css --watch"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.1.4",
+        "tailwindcss": "^4.1.4",
+        "daisyui": "^5.0.22"
+    }
+}

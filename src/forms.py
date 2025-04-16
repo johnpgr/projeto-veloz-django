@@ -9,8 +9,20 @@ class ProductForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
+        labels = {
+            'name': 'Nome',
+            'description': 'Descrição',
+            'price': 'Preço',
+            'sku': 'SKU',
+            'stock': 'Estoque',
+            'is_active': 'Ativo',
+        }
 
 class SaleForm(forms.ModelForm):
     class Meta:
         model = Sale
         fields = ['product', 'quantity']
+        labels = {
+            'product': 'Produto',
+            'quantity': 'Quantidade',
+        }

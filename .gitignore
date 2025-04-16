@@ -1,4 +1,5 @@
-bin/
 env/
 .env
 **/*.pyc
+node_modules/
+.llm/

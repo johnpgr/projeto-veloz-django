@@ -17,11 +17,21 @@ class ProductCreateView(CreateView):
     template_name = 'product_form.html'
     success_url = reverse_lazy('product-list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_create'] = True
+        return context
+
 class ProductUpdateView(UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'product_form.html'
     success_url = reverse_lazy('product-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_create'] = False
+        return context
 
 class ProductDeleteView(DeleteView):
     model = Product

@@ -1,2 +1,5 @@
 @import "tailwindcss";
-@config "../../../tailwind.config.js";
+@source "../../templates/**/*.html";
+@plugin "daisyui" {
+    themes: corporate --default, business --prefersdark;
+}

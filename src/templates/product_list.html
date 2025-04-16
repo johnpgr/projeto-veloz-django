@@ -1,59 +1,60 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Products</h2>
-            <a href="{% url 'product-create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">Add Product</a>
-        </div>
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for product in products %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.sku }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ product.price }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.stock }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <a href="{% url 'product-update' product.pk %}" class="text-yellow-600 hover:text-yellow-900">Edit</a>
-                        <button hx-get="{% url 'product-delete' product.pk %}"
-                                hx-target="#modal-container"
-                                hx-swap="innerHTML"
-                                class="text-red-600 hover:text-red-900">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-                {% if is_paginated %}
-                <div class="pagination">
-                    <span class="step-links">
-                        {% if page_obj.has_previous %}
-                            <a href="?page=1">&laquo; first</a>
-                            <a href="?page={{page_obj.previous_page_number}}">previous</a>
-                        {% endif %}
-                        <span class="current">
-                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                        </span>
-
-                        {% if page_obj.has_next %}
-                            <a href="?page={{page_obj.next_page_number}}">next</a>
-                            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                        {% endif %}
-                    </span>
-                </div>
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="card-title text-2xl">produtos</h2>
+                <a href="{% url 'product-create' %}" class="btn btn-primary">novo produto</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="bg-base-200">nome</th>
+                            <th class="bg-base-200">sku</th>
+                            <th class="bg-base-200">preço</th>
+                            <th class="bg-base-200">estoque</th>
+                            <th class="bg-base-200">ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr class="hover">
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.sku }}</td>
+                            <td>${{ product.price }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'product-update' product.pk %}" class="btn btn-sm btn-warning">editar</a>
+                                    <button hx-get="{% url 'product-delete' product.pk %}"
+                                            hx-target="#modal-container"
+                                            hx-swap="innerhtml"
+                                            class="btn btn-sm btn-error">
+                                        deletar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if is_paginated %}
+            <div class="join flex justify-center mt-4">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="join-item btn btn-neutral">&laquo; primeira</a>
+                    <a href="?page={{page_obj.previous_page_number}}" class="join-item btn btn-neutral">anterior</a>
                 {% endif %}
-            </tbody>
-        </table>
+                <button class="join-item btn btn-disabled">página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
+                {% if page_obj.has_next %}
+                    <a href="?page={{page_obj.next_page_number}}" class="join-item btn btn-neutral">próxima</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="join-item btn btn-neutral">ultima &raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
     <div id="modal-container"></div>
 {% endblock %}
