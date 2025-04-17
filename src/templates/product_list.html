@@ -13,28 +13,28 @@
                     <tr>
                         <th class="bg-base-200">Nome</th>
                         <th class="bg-base-200">SKU</th>
-                        <th class="bg-base-200">
                         {% with request.GET.page as current_page %}
-                        <a href="?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
-                            Preço
-                            {% if request.GET.ordering == "price" %}
-                                &#9650;
-                            {% elif request.GET.ordering == "-price" %}
-                                &#9660;
-                            {% endif %}
-                        </a>
+                            <th class="bg-base-200">
+                            <a href="?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                                Preço
+                                {% if request.GET.ordering == "price" %}
+                                    &#9650;
+                                {% elif request.GET.ordering == "-price" %}
+                                    &#9660;
+                                {% endif %}
+                            </a>
+                            </th>
+                            <th class="bg-base-200">
+                            <a href="?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                                Estoque
+                                {% if request.GET.ordering == "stock" %}
+                                    &#9650;
+                                {% elif request.GET.ordering == "-stock" %}
+                                    &#9660;
+                                {% endif %}
+                            </a>
+                            </th>
                         {% endwith %}
-                        </th>
-                        <th class="bg-base-200">
-                        <a href="?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
-                            Estoque
-                            {% if request.GET.ordering == "stock" %}
-                                &#9650;
-                            {% elif request.GET.ordering == "-stock" %}
-                                &#9660;
-                            {% endif %}
-                        </a>
-                        </th>
                         <th class="bg-base-200">Ações</th>
                     </tr>
                 </thead>
