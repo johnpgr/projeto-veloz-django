@@ -13,8 +13,28 @@
                     <tr>
                         <th class="bg-base-200">Nome</th>
                         <th class="bg-base-200">SKU</th>
-                        <th class="bg-base-200">Preço</th>
-                        <th class="bg-base-200">Estoque</th>
+                        <th class="bg-base-200">
+                        {% with request.GET.page as current_page %}
+                        <a href="?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                            Preço
+                            {% if request.GET.ordering == "price" %}
+                                &#9650;
+                            {% elif request.GET.ordering == "-price" %}
+                                &#9660;
+                            {% endif %}
+                        </a>
+                        {% endwith %}
+                        </th>
+                        <th class="bg-base-200">
+                        <a href="?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                            Estoque
+                            {% if request.GET.ordering == "stock" %}
+                                &#9650;
+                            {% elif request.GET.ordering == "-stock" %}
+                                &#9660;
+                            {% endif %}
+                        </a>
+                        </th>
                         <th class="bg-base-200">Ações</th>
                     </tr>
                 </thead>
@@ -60,20 +80,25 @@
                             </div>
                         </td>
                     </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Nenhum produto cadastrado.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% if is_paginated %}
         <div class="join flex justify-center mt-4">
+            <p class="text-sm">Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }} produtos</p>
             {% if page_obj.has_previous %}
-                <a href="?page=1" class="join-item btn btn-neutral">&laquo; Primeira</a>
-                <a href="?page={{page_obj.previous_page_number}}" class="join-item btn btn-neutral">Anterior</a>
+                <a href="?page=1{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" class="join-item btn btn-neutral">&laquo; Primeira</a>
+                <a href="?page={{page_obj.previous_page_number}}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" class="join-item btn btn-neutral">Anterior</a>
             {% endif %}
-            <button class="join-item btn btn-disabled">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
+                <button class="join-item btn btn-disabled">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
             {% if page_obj.has_next %}
-                <a href="?page={{page_obj.next_page_number}}" class="join-item btn btn-neutral">Próxima</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="join-item btn btn-neutral">Ultima &raquo;</a>
+                <a href="?page={{page_obj.next_page_number}}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" class="join-item btn btn-neutral">Próxima</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" class="join-item btn btn-neutral">Ultima &raquo;</a>
             {% endif %}
         </div>
         {% endif %}

@@ -11,6 +11,13 @@ class ProductListView(ListView):
     context_object_name = 'products'
     paginate_by = 10
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ordering = self.request.GET.get('ordering', None)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        return queryset
+
 class ProductCreateView(CreateView):
     model = Product
     form_class = ProductForm
