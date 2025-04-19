@@ -3,27 +3,29 @@
 {% load form_filters %}
 
 {% block content %}
-<div class="bg-base-200 shadow rounded-lg p-6 max-w-2xl mx-auto">
-    <h2 class="text-2xl font-bold mb-6">{{ is_create|yesno:"Novo,Editar" }} Produto</h2>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="mb-4 flex flex-col w-full gap-1">
-            <label class="label">
-                <span class="label-text">{{ field.label }}</span>
-            </label>
-            {{ field }}
-            {% if field.errors %}
-            <label class="label">
-                <span class="label-text-alt text-red-500">{{ field.errors|striptags }}</span>
-            </label>
-            {% endif %}
-        </div>
-        {% endfor %}
-        <div class="flex justify-end space-x-2">
-            <a href="{% url 'product-list' %}" class="btn btn-outline">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-    </form>
+<div class="p-4 sm:p-8 md:p-16">
+    <div class="bg-base-200 shadow rounded-lg p-6 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold mb-6">{{ is_create|yesno:"Novo,Editar" }} Produto</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-4 flex flex-col w-full gap-1">
+                <label class="label">
+                    <span class="label-text">{{ field.label }}</span>
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-red-500">{{ field.errors|striptags }}</span>
+                </label>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div class="flex justify-end space-x-2">
+                <a href="{% url 'product-list' %}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

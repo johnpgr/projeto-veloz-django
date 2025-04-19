@@ -3,3 +3,8 @@
 @plugin "daisyui" {
     themes: lofi --default;
 }
+
+@theme {
+    --height-header: 64;
+    --height-contain-header: calc(100vh - 64px);
+}

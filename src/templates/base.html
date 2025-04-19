@@ -11,7 +11,7 @@
 </head>
 
 <body class="bg-base-100" hx-boost="true">
-    <nav class="bg-primary">
+    <nav class="bg-primary max-h-header">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{% url 'product-list' %}" class="text-white font-bold text-xl">Inventory System</a>
@@ -25,15 +25,14 @@
                     </form>
                     {% else %}
                     <a href="{% url 'login' %}" class="btn btn-secondary">Login</a>
+                    <a href="{% url 'signup' %}" class="btn btn-secondary">Signup</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {% block content %}
-        {% endblock %}
-    </div>
+    {% block content %}
+    {% endblock %}
 </body>
 
 </html>
