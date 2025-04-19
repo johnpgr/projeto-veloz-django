@@ -17,9 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from src.views import IndexRedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', IndexRedirectView, name='index'),
     path('admin/', admin.site.urls),
     path('', include('src.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

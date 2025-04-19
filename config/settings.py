@@ -136,3 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Authentication settings
 LOGIN_REDIRECT_URL = 'product-list'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Media files (Uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media' # Or os.path.join(BASE_DIR, 'media') if not using pathlib

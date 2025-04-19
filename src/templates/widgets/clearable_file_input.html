@@ -1,0 +1,18 @@
+{% if widget.is_initial %}
+  <div>
+    <a href="{{ widget.value.url }}" target="_blank" class="link link-hover text-xs link-primary text-base-content/70">{{ widget.value }}</a>
+    <img src="{{ widget.value.url }}" alt="Current Cover Image" class="max-h-40 rounded mb-2">
+  </div>
+  <div class="mb-2 text-sm">
+    {% if not widget.required %}
+      <label class="label cursor-pointer justify-start gap-1">
+        <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}" {% if widget.attrs.disabled %} disabled{% endif %} class="checkbox checkbox-xs" />
+        <span class="label-text text-xs">Remover</span>
+      </label>
+    {% endif %}
+  </div>
+<label class="label">
+  <span class="label-text text-sm">Alterar</span>
+</label>
+{% endif %}
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
