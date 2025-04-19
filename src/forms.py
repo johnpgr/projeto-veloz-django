@@ -1,6 +1,11 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 
-from .models import Product, Sale
+from .models import Product, Sale, User
+
+class UserSignupForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = User
 
 class ProductForm(forms.ModelForm):
     class Meta:

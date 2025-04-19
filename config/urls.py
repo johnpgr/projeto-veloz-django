@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from src.views import IndexRedirectView
 
 urlpatterns = [
+    path('', IndexRedirectView, name='index'),
     path('admin/', admin.site.urls),
     path('', include('src.urls')),
 ]
