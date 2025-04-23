@@ -33,8 +33,33 @@
                             <th>
                                 <a 
                                     class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-price' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
-                                    Preço
+                                    href="{% if request.GET.ordering == '-stock' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
+                                    Estoque
+                                    {% if request.GET.ordering == "stock" %}
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
+                                    {% elif request.GET.ordering == "-stock" %}
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-total_sold' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'total_sold' %}-total_sold{% else %}total_sold{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}"
+                                >
+                                    Vendas
+                                    {% if request.GET.ordering == "total_sold" %}
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
+                                    {% elif request.GET.ordering == "-total_sold" %}
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a 
+                                    class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-price' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}"
+                                >
+                                    Preço unid.
                                     {% if request.GET.ordering == "price" %}
                                         <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
                                     {% elif request.GET.ordering == "-price" %}
@@ -54,19 +79,9 @@
                                     {% endif %}
                                 </a>
                             </th>
-                            <th>
-                                <a 
-                                    class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-stock' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
-                                    Estoque
-                                    {% if request.GET.ordering == "stock" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-stock" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
                             {% endwith %}
+                            <th>Ativo</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,9 +96,45 @@
                                 {{ product.name }}
                             </td>
                             <td>{{ product.sku }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>{{ product.total_sold }}</td>
                             <td>${{ product.price }}</td>
                             <td>${{ product.total_revenue|floatformat:2 }}</td>
-                            <td>{{ product.stock }}</td>
+                            <td>
+                                {% if product.is_active %}
+                                    <span>
+                                        <img src="{% static 'svg/check.svg' %}" alt="Editar" class="w-5 h-5 inline">
+                                    </span>
+                                {% else %}
+                                    <span>
+                                        <img src="{% static 'svg/x.svg' %}" alt="Editar" class="w-5 h-5 inline">
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="dropdown dropdown-end">
+                                    <div tabindex="0" role="button" class="btn btn-sm btn-link">
+                                        <img src="{% static 'svg/ellipsis-vertical.svg' %}" alt="Editar" class="w-5 h-5 inline">
+                                    </div>
+                                    <ul class="menu dropdown-content w-32 rounded-box bg-base-100 shadow-sm z-10">
+                                        <li>
+                                            <a href="{% url 'product-update' product.id %}">
+                                                <img src="{% static 'svg/square-pen.svg' %}" alt="Editar" class="w-4 h-4 inline">
+                                                Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button 
+                                                hx-get="{% url 'product-delete' product.id %}"
+                                                class="text-red-500"
+                                            >
+                                                <img src="{% static 'svg/trash-can.svg' %}" alt="Excluir" class="w-4 h-4 inline">
+                                                Excluir
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>

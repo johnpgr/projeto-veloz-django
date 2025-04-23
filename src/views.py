@@ -28,7 +28,8 @@ class ProductListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset()
         queryset = queryset.annotate(
             total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'), 
-                                   default=0)
+                                   default=0),
+            total_sold=models.Sum('sales__quantity', default=0),
         )
         ordering = self.request.GET.get('ordering', None)
         if ordering:

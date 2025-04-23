@@ -32,7 +32,7 @@ class ProductForm(forms.ModelForm):
             'description': 'Descrição',
             'price': 'Preço',
             'sku': 'SKU',
-            'cover_image': 'Imagem de Capa',
+            'cover_image': 'Imagem',
             'stock': 'Estoque',
             'is_active': 'Ativo',
         }
