@@ -105,6 +105,45 @@ def prod_command():
         if django_process.poll() is None:
             os.killpg(os.getpgid(django_process.pid), signal.SIGTERM)
 
+def makemigrations_command():
+    """Run Django makemigrations"""
+    print("Running makemigrations...")
+    env = activate_venv()
+    process = run_command("python manage.py makemigrations", env=env)
+    process.wait()
+    
+    if process.returncode != 0:
+        print("Failed to make migrations")
+        sys.exit(1)
+    
+    print("Migrations created successfully!")
+
+def migrate_command():
+    """Run Django migrate"""
+    print("Running migrations...")
+    env = activate_venv()
+    process = run_command("python manage.py migrate", env=env)
+    process.wait()
+    
+    if process.returncode != 0:
+        print("Failed to apply migrations")
+        sys.exit(1)
+    
+    print("Migrations applied successfully!")
+
+def seed_command():
+    """Run Django seed_products command"""
+    print("Seeding products...")
+    env = activate_venv()
+    process = run_command("python manage.py seed_products", env=env)
+    process.wait()
+    
+    if process.returncode != 0:
+        print("Failed to seed products")
+        sys.exit(1)
+    
+    print("Products seeded successfully!")
+
 def main():
     parser = argparse.ArgumentParser(description="Development CLI tool")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -118,6 +157,15 @@ def main():
     # Prod command
     prod_parser = subparsers.add_parser("prod", help="Run in production mode (build Tailwind + Django)")
     
+    # Makemigrations command
+    makemigrations_parser = subparsers.add_parser("makemigrations", help="Run Django makemigrations")
+    
+    # Migrate command
+    migrate_parser = subparsers.add_parser("migrate", help="Run Django migrate")
+
+    # Seed command
+    seed_parser = subparsers.add_parser("seed", help="Run Django seed_products command")
+    
     args = parser.parse_args()
     
     if args.command == "install":
@@ -126,6 +174,12 @@ def main():
         dev_command()
     elif args.command == "prod":
         prod_command()
+    elif args.command == "makemigrations":
+        makemigrations_command()
+    elif args.command == "migrate":
+        migrate_command()
+    elif args.command == "seed":
+        seed_command()
     else:
         parser.print_help()
 

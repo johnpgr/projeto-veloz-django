@@ -21,6 +21,9 @@ class ProductListView(LoginRequiredMixin, ListView):
     context_object_name = 'products'
     paginate_by = 10
 
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get('per_page', 10)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         ordering = self.request.GET.get('ordering', None)

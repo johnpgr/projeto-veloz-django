@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="p-4 md:p-8">
@@ -6,16 +7,19 @@
         <div class="card-body">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="card-title text-2xl">Produtos</h2>
-                <a href="{% url 'product-create' %}" class="btn btn-primary">Novo produto</a>
+                <a href="{% url 'product-create' %}" class="btn btn-primary">
+                    <img src="{% static 'svg/circle-plus.svg' %}" alt="Novo produto" class="w-4 h-4 mt-0.5">
+                    Novo produto
+                </a>
             </div>
             <div class="overflow-x-auto">
-                <table class="table">
+                <table class="table table-zebra">
                     <thead>
                         <tr>
-                            <th class="bg-base-200">Nome</th>
-                            <th class="bg-base-200">SKU</th>
+                            <th>Nome</th>
+                            <th>SKU</th>
                             {% with request.GET.page as current_page %}
-                            <th class="bg-base-200">
+                            <th>
                                 <a
                                     href="?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
                                     Preço
@@ -26,7 +30,7 @@
                                     {% endif %}
                                 </a>
                             </th>
-                            <th class="bg-base-200">
+                            <th>
                                 <a
                                     href="?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
                                     Estoque
@@ -38,45 +42,15 @@
                                 </a>
                             </th>
                             {% endwith %}
-                            <th class="bg-base-200">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for product in products %}
-                        <tr class="{% cycle 'bg-base-100' 'bg-base-200' %}">
+                        <tr>
                             <td>{{ product.name }}</td>
                             <td>{{ product.sku }}</td>
                             <td>${{ product.price }}</td>
                             <td>{{ product.stock }}</td>
-                            <td>
-                                <div class="flex space-x-2">
-                                    <a aria-label="Editar produto" href="{% url 'product-update' product.pk %}"
-                                        class="btn btn-outline btn-xs">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-square-pen-icon lucide-square-pen">
-                                            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                            <path
-                                                d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-                                        </svg>
-                                    </a>
-                                    <button type="button" aria-label="Deletar produto"
-                                        hx-get="{% url 'product-delete' product.pk %}" hx-target="#modal-container"
-                                        hx-swap="innerHTML" class="btn btn-primary btn-xs">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-trash2-icon lucide-trash-2">
-                                            <path d="M3 6h18" />
-                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                            <line x1="10" x2="10" y1="11" y2="17" />
-                                            <line x1="14" x2="14" y1="11" y2="17" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -86,26 +60,31 @@
                     </tbody>
                 </table>
             </div>
-            {% if is_paginated %}
-            <div class="join flex justify-center mt-4">
-                <p class="text-sm">Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{
-                    page_obj.paginator.count }} produtos</p>
-                {% if page_obj.has_previous %}
-                <a href="?page=1{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                    class="join-item btn btn-neutral">&laquo; Primeira</a>
-                <a href="?page={{page_obj.previous_page_number}}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                    class="join-item btn btn-neutral">Anterior</a>
-                {% endif %}
-                <button class="join-item btn btn-disabled">Página {{ page_obj.number }} de {{
-                    page_obj.paginator.num_pages }}</button>
-                {% if page_obj.has_next %}
-                <a href="?page={{page_obj.next_page_number}}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                    class="join-item btn btn-neutral">Próxima</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                    class="join-item btn btn-neutral">Ultima &raquo;</a>
-                {% endif %}
+            <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex items-center gap-2">
+                    <p class="text-sm whitespace-nowrap">Exibir por página</p>
+                    <select class="select select-sm rounded max-w-20" onchange="window.location.href=this.value">
+                        {% with sizes=request.GET.per_page|default:'10' %}
+                        <option value="?per_page=10{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
+                            {% if sizes == '10' %}selected{% endif %}>10</option>
+                        <option value="?per_page=25{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
+                            {% if sizes == '25' %}selected{% endif %}>25</option>
+                        <option value="?per_page=50{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
+                            {% if sizes == '50' %}selected{% endif %}>50</option>
+                        <option value="?per_page=100{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
+                            {% if sizes == '100' %}selected{% endif %}>100</option>
+                        {% endwith %}
+                    </select>
+                    <p class="text-sm whitespace-nowrap">
+                        {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }}</p>
+                    <div class="join">
+                        <a href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
+                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_previous %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-left.svg' %}" alt="Previous" class="w-4 h-4"></a>
+                        <a href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
+                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_next %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-right.svg' %}" alt="Previous" class="w-4 h-4"></a>
+                    </div>
+                </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
