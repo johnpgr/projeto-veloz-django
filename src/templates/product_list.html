@@ -13,31 +13,56 @@
                 </a>
             </div>
             <div class="overflow-x-auto">
-                <table class="table table-zebra">
+                <table class="table">
                     <thead>
                         <tr>
-                            <th>Nome</th>
+                            <th>
+                                <a 
+                                    class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-name' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'name' %}-name{% else %}name{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
+                                    Nome
+                                    {% if request.GET.ordering == "name" %}
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
+                                    {% elif request.GET.ordering == "-name" %}
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
+                                    {% endif %}
+                                </a>
+                            </th>
                             <th>SKU</th>
                             {% with request.GET.page as current_page %}
                             <th>
-                                <a
-                                    href="?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                                <a 
+                                    class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-price' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
                                     Preço
                                     {% if request.GET.ordering == "price" %}
-                                    &#9650;
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
                                     {% elif request.GET.ordering == "-price" %}
-                                    &#9660;
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
                                     {% endif %}
                                 </a>
                             </th>
                             <th>
                                 <a
-                                    href="?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}">
+                                    class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-total_revenue' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'total_revenue' %}-total_revenue{% else %}total_revenue{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
+                                    Receita Total
+                                    {% if request.GET.ordering == "total_revenue" %}
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
+                                    {% elif request.GET.ordering == "-total_revenue" %}
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a 
+                                    class="flex items-center gap-1"
+                                    href="{% if request.GET.ordering == '-stock' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
                                     Estoque
                                     {% if request.GET.ordering == "stock" %}
-                                    &#9650;
+                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
                                     {% elif request.GET.ordering == "-stock" %}
-                                    &#9660;
+                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
                                     {% endif %}
                                 </a>
                             </th>
@@ -47,9 +72,17 @@
                     <tbody>
                         {% for product in products %}
                         <tr>
-                            <td>{{ product.name }}</td>
+                            <td class="flex items-center gap-2">
+                                {% if product.cover_image %}
+                                    <img src="{{ product.cover_image.url }}" alt="{{ product.name }}" class="w-12 h-12 object-cover rounded">
+                                {% else %}
+                                    <img src="/media/placeholder.svg" alt="Placeholder" class="w-12 h-12 object-cover rounded">
+                                {% endif %}
+                                {{ product.name }}
+                            </td>
                             <td>{{ product.sku }}</td>
                             <td>${{ product.price }}</td>
+                            <td>${{ product.total_revenue|floatformat:2 }}</td>
                             <td>{{ product.stock }}</td>
                         </tr>
                         {% empty %}
@@ -79,9 +112,9 @@
                         {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }}</p>
                     <div class="join">
                         <a href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
-                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_previous %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-left.svg' %}" alt="Previous" class="w-4 h-4"></a>
+                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_previous %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-left.svg' %}" alt="Página anterior" class="w-4 h-4"></a>
                         <a href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
-                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_next %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-right.svg' %}" alt="Previous" class="w-4 h-4"></a>
+                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_next %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-right.svg' %}" alt="Proxima página" class="w-4 h-4"></a>
                     </div>
                 </div>
             </div>
