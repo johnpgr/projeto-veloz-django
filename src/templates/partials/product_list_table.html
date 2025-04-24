@@ -113,7 +113,10 @@
                                 </li>
                                 <li>
                                     <button
+                                        type="button"
                                         hx-get="{% url 'product-delete' product.id %}"
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
                                         class="text-red-500"
                                     >
                                         <img src="{% static 'svg/trash-can.svg' %}" alt="Excluir" class="w-4 h-4 inline">

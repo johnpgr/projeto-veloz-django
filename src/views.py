@@ -89,7 +89,7 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
             return self.render_to_response(context)
         return HttpResponseRedirect(self.success_url)
 
-    def delete(self, selft, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.delete()
         return HttpResponseRedirect(self.get_success_url())
