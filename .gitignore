@@ -1,5 +1,6 @@
 src/static/css/styles.css
 env/
+.DS_Store
 .env
 **/*.pyc
 node_modules/

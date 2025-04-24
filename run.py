@@ -131,11 +131,12 @@ def migrate_command():
     
     print("Migrations applied successfully!")
 
-def seed_command():
+def seed_command(num_records: int):
     """Run Django seed_products command"""
-    print("Seeding products...")
+    print(f"Seeding {num_records} products...")
     env = activate_venv()
-    process = run_command("python manage.py seed_products", env=env)
+    command = f"python manage.py seed_products --count={num_records}"
+    process = run_command(command, env=env)
     process.wait()
     
     if process.returncode != 0:
@@ -165,6 +166,7 @@ def main():
 
     # Seed command
     seed_parser = subparsers.add_parser("seed", help="Run Django seed_products command")
+    seed_parser.add_argument("num_records", type=int, help="Number of records to seed")
     
     args = parser.parse_args()
     
@@ -179,7 +181,7 @@ def main():
     elif args.command == "migrate":
         migrate_command()
     elif args.command == "seed":
-        seed_command()
+        seed_command(args.num_records)
     else:
         parser.print_help()
 

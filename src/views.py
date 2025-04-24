@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponse,HttpResponseRedirect
+from django.contrib.postgres.search import TrigramSimilarity
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -33,16 +34,16 @@ class ProductListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.annotate(
-            total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'),
-                                default=0),
+            total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'), default=0),
             total_sold=models.Sum('sales__quantity', default=0),
         )
 
         search_term = self.request.GET.get('search', None)
         if search_term:
-            # Using icontains for simple case-insensitive search
-            # For true fuzzy search, consider libraries like django-fuzzywuzzy or pg_trgm
-            queryset = queryset.filter(name__icontains=search_term)
+            queryset = queryset.annotate(
+                similarity=TrigramSimilarity('name', search_term)
+            ).filter(similarity__gt=0.1).order_by('-similarity')
+        print(queryset.query)
 
         ordering = self.request.GET.get('ordering', None)
         if ordering:
