@@ -98,10 +98,6 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         success_url = self.get_success_url()
         self.object.delete()
-        if request.headers.get('HX-Request'):
-            response = HttpResponse()
-            response['HX-Redirect'] = success_url
-            return response
         return HttpResponseRedirect(success_url)
 
 # Sale Views

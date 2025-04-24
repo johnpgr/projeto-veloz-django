@@ -23,6 +23,7 @@
             </form>
             <form 
                 hx-post="{% url 'product-delete' product.pk %}"
+                hx-push-url="true"
                 hx-target="body"
                 class="inline"
             >
