@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse,HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -94,12 +94,12 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
             return self.render_to_response(context)
         return HttpResponseRedirect(self.get_success_url())
 
-    def delete(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         success_url = self.get_success_url()
         self.object.delete()
         if request.headers.get('HX-Request'):
-            response = HttpResponseRedirect(success_url)
+            response = HttpResponse()
             response['HX-Redirect'] = success_url
             return response
         return HttpResponseRedirect(success_url)
