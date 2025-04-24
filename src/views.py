@@ -1,7 +1,6 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.utils import log
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -23,7 +22,13 @@ class ProductListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_paginate_by(self, queryset):
-        return self.request.GET.get('per_page', 10)
+        val = self.request.GET.get('per_page', 10)
+        try:
+            val = int(val)
+        except (ValueError, TypeError):
+            val = 10
+        return val
+
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -87,12 +92,17 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
         context = self.get_context_data(object=self.object)
         if request.headers.get('HX-Request'):
             return self.render_to_response(context)
-        return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(self.get_success_url())
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+        success_url = self.get_success_url()
         self.object.delete()
-        return HttpResponseRedirect(self.get_success_url())
+        if request.headers.get('HX-Request'):
+            response = HttpResponseRedirect(success_url)
+            response['HX-Redirect'] = success_url
+            return response
+        return HttpResponseRedirect(success_url)
 
 # Sale Views
 class SaleListView(LoginRequiredMixin, ListView):
@@ -106,7 +116,7 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
     template_name = 'sale_form.html'
     success_url = reverse_lazy('sale-list')
 
-    def form_valid(self, form: SaleForm):
+    def form_valid(self, form):
         sale = form.save(commit=False)
         product = sale.product
         if product.stock >= sale.quantity:

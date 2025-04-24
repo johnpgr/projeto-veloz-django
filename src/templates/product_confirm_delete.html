@@ -19,7 +19,7 @@
         </div>
         <div class="modal-action mt-6 flex justify-end gap-2">
             <form method="dialog" class="inline">
-                <button type="submit" class="btn btn-outline">Cancelar</button>
+                <button type="submit" class="btn">Cancelar</button>
             </form>
             <form 
                 hx-post="{% url 'product-delete' product.pk %}"
@@ -27,7 +27,7 @@
                 class="inline"
             >
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary">Deletar</button>
+                <button type="submit" class="btn btn-error">Deletar</button>
             </form>
         </div>
     </div>

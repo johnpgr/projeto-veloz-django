@@ -69,19 +69,23 @@
                     </th>
                     {% endwith %}
                     <th>Ativo</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for product in products %}
                 <tr>
-                    <td class="flex items-center gap-2">
+                    <td class="flex items-center gap-4">
                         {% if product.cover_image %}
                             <img src="{{ product.cover_image.url }}" alt="{{ product.name }}" class="w-12 h-12 object-cover rounded">
                         {% else %}
                             <img src="/media/placeholder.svg" alt="Placeholder" class="w-12 h-12 object-cover rounded">
                         {% endif %}
-                        {{ product.name }}
+                        <a
+                            class="text-sm font-semibold hover:underline"
+                            href="{% url 'product-update' product.id %}"
+                        >
+                            {{ product.name }}
+                        </a>
                     </td>
                     <td>{{ product.sku }}</td>
                     <td>{{ product.stock }}</td>
@@ -98,33 +102,6 @@
                                 <img src="{% static 'svg/x.svg' %}" alt="Editar" class="w-5 h-5 inline">
                             </span>
                         {% endif %}
-                    </td>
-                    <td>
-                        <div class="dropdown dropdown-end">
-                            <div tabindex="0" role="button" class="btn btn-sm btn-link">
-                                <img src="{% static 'svg/ellipsis-vertical.svg' %}" alt="Editar" class="w-5 h-5 inline">
-                            </div>
-                            <ul class="menu dropdown-content w-32 rounded-box bg-base-100 shadow-sm z-10">
-                                <li>
-                                    <a href="{% url 'product-update' product.id %}">
-                                        <img src="{% static 'svg/square-pen.svg' %}" alt="Editar" class="w-4 h-4 inline">
-                                        Editar
-                                    </a>
-                                </li>
-                                <li>
-                                    <button
-                                        type="button"
-                                        hx-get="{% url 'product-delete' product.id %}"
-                                        hx-target="#modal-container"
-                                        hx-swap="innerHTML"
-                                        class="text-red-500"
-                                    >
-                                        <img src="{% static 'svg/trash-can.svg' %}" alt="Excluir" class="w-4 h-4 inline">
-                                        Excluir
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
                     </td>
                 </tr>
                 {% empty %}
