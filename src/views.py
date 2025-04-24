@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.utils import log
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -27,14 +28,32 @@ class ProductListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.annotate(
-            total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'), 
-                                   default=0),
+            total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'),
+                                default=0),
             total_sold=models.Sum('sales__quantity', default=0),
         )
+
+        search_term = self.request.GET.get('search', None)
+        if search_term:
+            # Using icontains for simple case-insensitive search
+            # For true fuzzy search, consider libraries like django-fuzzywuzzy or pg_trgm
+            queryset = queryset.filter(name__icontains=search_term)
+
         ordering = self.request.GET.get('ordering', None)
         if ordering:
             queryset = queryset.order_by(ordering)
         return queryset
+
+    def render_to_response(self, context, **response_kwargs):
+        is_htmx_search = (
+            self.request.headers.get('HX-Request') == 'true' and
+            self.request.headers.get('HX-Trigger') == 'product-search-input'
+        )
+        if is_htmx_search:
+            self.template_name = 'partials/product_list_table.html'
+        else:
+            self.template_name = 'product_list.html'
+        return super().render_to_response(context, **response_kwargs)
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product

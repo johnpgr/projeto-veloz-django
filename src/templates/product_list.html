@@ -2,175 +2,31 @@
 {% load static %}
 
 {% block content %}
-<div class="p-4 md:p-8">
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="card-title text-2xl">Produtos</h2>
-                <a href="{% url 'product-create' %}" class="btn btn-primary">
-                    <img src="{% static 'svg/circle-plus.svg' %}" alt="Novo produto" class="w-4 h-4 mt-0.5">
-                    Novo produto
-                </a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>
-                                <a 
-                                    class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-name' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'name' %}-name{% else %}name{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
-                                    Nome
-                                    {% if request.GET.ordering == "name" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-name" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
-                            <th>SKU</th>
-                            {% with request.GET.page as current_page %}
-                            <th>
-                                <a 
-                                    class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-stock' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'stock' %}-stock{% else %}stock{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
-                                    Estoque
-                                    {% if request.GET.ordering == "stock" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-stock" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
-                            <th>
-                                <a class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-total_sold' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'total_sold' %}-total_sold{% else %}total_sold{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}"
-                                >
-                                    Vendas
-                                    {% if request.GET.ordering == "total_sold" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-total_sold" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
-                            <th>
-                                <a 
-                                    class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-price' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'price' %}-price{% else %}price{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}"
-                                >
-                                    Preço unid.
-                                    {% if request.GET.ordering == "price" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-price" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
-                            <th>
-                                <a
-                                    class="flex items-center gap-1"
-                                    href="{% if request.GET.ordering == '-total_revenue' %}?{% if current_page %}page={{ current_page }}{% endif %}{% else %}?ordering={% if request.GET.ordering == 'total_revenue' %}-total_revenue{% else %}total_revenue{% endif %}{% if current_page %}&page={{ current_page }}{% endif %}{% endif %}">
-                                    Receita Total
-                                    {% if request.GET.ordering == "total_revenue" %}
-                                        <img src="{% static 'svg/chevron-up.svg' %}" alt="Ordenar para cima" class="w-4 h-4 inline">
-                                    {% elif request.GET.ordering == "-total_revenue" %}
-                                        <img src="{% static 'svg/chevron-down.svg' %}" alt="Ordenar para baixo" class="w-4 h-4 inline">
-                                    {% endif %}
-                                </a>
-                            </th>
-                            {% endwith %}
-                            <th>Ativo</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr>
-                            <td class="flex items-center gap-2">
-                                {% if product.cover_image %}
-                                    <img src="{{ product.cover_image.url }}" alt="{{ product.name }}" class="w-12 h-12 object-cover rounded">
-                                {% else %}
-                                    <img src="/media/placeholder.svg" alt="Placeholder" class="w-12 h-12 object-cover rounded">
-                                {% endif %}
-                                {{ product.name }}
-                            </td>
-                            <td>{{ product.sku }}</td>
-                            <td>{{ product.stock }}</td>
-                            <td>{{ product.total_sold }}</td>
-                            <td>${{ product.price }}</td>
-                            <td>${{ product.total_revenue|floatformat:2 }}</td>
-                            <td>
-                                {% if product.is_active %}
-                                    <span>
-                                        <img src="{% static 'svg/check.svg' %}" alt="Editar" class="w-5 h-5 inline">
-                                    </span>
-                                {% else %}
-                                    <span>
-                                        <img src="{% static 'svg/x.svg' %}" alt="Editar" class="w-5 h-5 inline">
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="dropdown dropdown-end">
-                                    <div tabindex="0" role="button" class="btn btn-sm btn-link">
-                                        <img src="{% static 'svg/ellipsis-vertical.svg' %}" alt="Editar" class="w-5 h-5 inline">
-                                    </div>
-                                    <ul class="menu dropdown-content w-32 rounded-box bg-base-100 shadow-sm z-10">
-                                        <li>
-                                            <a href="{% url 'product-update' product.id %}">
-                                                <img src="{% static 'svg/square-pen.svg' %}" alt="Editar" class="w-4 h-4 inline">
-                                                Editar
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <button 
-                                                hx-get="{% url 'product-delete' product.id %}"
-                                                class="text-red-500"
-                                            >
-                                                <img src="{% static 'svg/trash-can.svg' %}" alt="Excluir" class="w-4 h-4 inline">
-                                                Excluir
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">Nenhum produto cadastrado.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="flex justify-center items-center gap-2 mt-4">
-                <div class="flex items-center gap-2">
-                    <p class="text-sm whitespace-nowrap">Exibir por página</p>
-                    <select class="select select-sm rounded max-w-20" onchange="window.location.href=this.value">
-                        {% with sizes=request.GET.per_page|default:'10' %}
-                        <option value="?per_page=10{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                            {% if sizes == '10' %}selected{% endif %}>10</option>
-                        <option value="?per_page=25{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                            {% if sizes == '25' %}selected{% endif %}>25</option>
-                        <option value="?per_page=50{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                            {% if sizes == '50' %}selected{% endif %}>50</option>
-                        <option value="?per_page=100{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}"
-                            {% if sizes == '100' %}selected{% endif %}>100</option>
-                        {% endwith %}
-                    </select>
-                    <p class="text-sm whitespace-nowrap">
-                        {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }}</p>
-                    <div class="join">
-                        <a href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
-                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_previous %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-left.svg' %}" alt="Página anterior" class="w-4 h-4"></a>
-                        <a href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% else %}#{% endif %}"
-                            class="join-item btn btn-sm btn-ghost {% if not page_obj.has_next %}btn-disabled{% endif %}"><img src="{% static 'svg/chevron-right.svg' %}" alt="Proxima página" class="w-4 h-4"></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="p-4 sm:p-6 md:p-12 container mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <label class="input input-bordered w-full max-w-xs">
+            <img src="{% static 'svg/search.svg' %}" alt="Buscar" class="w-4 h-4">
+            <input 
+                type="search"
+                id="product-search-input"
+                name="search"
+                class="grow"
+                placeholder="Buscar produtos por nome..."
+                value="{{ request.GET.search|default:'' }}"
+                hx-get="."
+                hx-trigger="keyup changed delay:300ms, search"
+                hx-target="#product-table-container"
+                hx-swap="outerHTML"
+                hx-indicator="#search-spinner"
+                hx-push-url="true"
+            >
+        </label>
+        <span id="search-spinner" class="htmx-indicator loading loading-spinner loading-sm"></span>
+        <a href="{% url 'product-create' %}" class="btn btn-primary">
+            Criar novo
+        </a>
     </div>
+    {% include 'partials/product_list_table.html' %}
 </div>
 <div id="modal-container"></div>
 {% endblock %}
