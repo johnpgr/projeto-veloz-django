@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../../templates/**/*.html";
+
 @plugin "daisyui" {
     themes: lofi --default;
 }
@@ -7,4 +8,10 @@
 @theme {
     --height-header: 64;
     --height-contain-header: calc(100vh - 64px);
+}
+
+@layer base {
+    html, body {
+        font-family: 'Geist', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    }
 }
