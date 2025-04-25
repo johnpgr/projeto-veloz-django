@@ -55,13 +55,15 @@ class Command(BaseCommand):
                     sale_date=random_date,
                 )
             )
-            print(f"Sale created: User ID {user_id}, Product ID {product_id}, Quantity {quantity}, Sale Date {random_date}")
+            self.stdout.write(
+                self.style.SUCCESS(f'Created: Sale for {random_date.strftime("%Y-%m-%d")} - User ID {user_id}, Product ID {product_id}, Quantity {quantity}')
+            )
 
         try:
             # Use bulk_create for efficiency
             Sale.objects.bulk_create(sales_to_create)
             self.stdout.write(
-                self.style.SUCCESS(f'Successfully created {count} sales records.')
+                self.style.SUCCESS(f'\nSuccessfully processed {count} sales')
             )
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error creating sales: {e}'))
