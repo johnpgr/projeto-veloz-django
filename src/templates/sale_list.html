@@ -7,12 +7,11 @@
         <span id="search-spinner" class="htmx-indicator loading loading-spinner loading-sm"></span>
         <!-- Date Range Filter Dropdown -->
         <form method="get" class="flex items-center space-x-2">
-            <select name="range" class="select select-bordered select-sm"
-                    onchange="this.form.submit()">
+            <select name="range" class="select select-bordered select-sm" onchange="this.form.submit()">
                 {% for key, display_text in range_options.items %}
-                    <option value="{{ key }}" {% if key == selected_range %}selected{% endif %}>
-                        {{ display_text }}
-                    </option>
+                <option value="{{ key }}" {% if key == selected_range %}selected{% endif %}>
+                    {{ display_text }}
+                </option>
                 {% endfor %}
             </select>
             <noscript><button type="submit" class="btn btn-sm">Filtro</button></noscript>
@@ -22,30 +21,41 @@
         </a>
     </div>
     <div class="space-y-6">
-        {% regroup sales by sale_date.year as sales_by_year %}
-        {% for year_group in sales_by_year %}
-            {% regroup year_group.list by sale_date.month as sales_by_month %}
-            {% for month_group in sales_by_month %}
-                <div class="divider divider-start text-xl font-semibold my-6">
-                    {{ month_group.list.0.sale_date|date:"F Y" }}
+        {% for group in grouped_sales %}
+        {% for month in group.months %}
+        <div class="flex items-center gap-4 mb-2">
+            <!-- Placeholder user icon -->
+            <span class="inline-block w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-xl">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 8-4 8-4s8 0 8 4" />
+                </svg>
+            </span>
+            <div>
+                <div class="font-semibold text-lg">{{ group.user.username }}</div>
+                <div class="text-sm text-gray-500">
+                    {{ month.month_name }} {{ month.year }} &mdash;
+                    <span class="font-bold">R$ {{ month.total|floatformat:2 }}</span>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {% for sale in month_group.list %}
-                    <div class="card bg-base-200 shadow-md">
-                        <div class="card-body p-4">
-                            <h3 class="card-title text-lg">{{ sale.product.name }}</h3>
-                            <p>Quantia: <span class="font-medium">{{ sale.quantity }}</span></p>
-                            <p>Vendido por: <span class="font-medium">{{ sale.user.username }}</span></p>
-                            <div class="card-actions justify-end">
-                                <span class="text-sm text-gray-500">{{ sale.sale_date|date:"d, M" }}</span>
-                            </div>
-                        </div>
+            </div>
+        </div>
+        <div class="flex flex-col gap-4">
+            {% for sale in month.sales %}
+            <div class="card bg-base-200 shadow-md">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-lg">{{ sale.product.name }}</h3>
+                    <p>Quantia: <span class="font-medium">{{ sale.quantity }}</span></p>
+                    <div class="card-actions justify-end">
+                        <span class="text-sm text-gray-500">{{ sale.sale_date|date:"d, M" }}</span>
                     </div>
-                    {% endfor %}
                 </div>
+            </div>
             {% endfor %}
+        </div>
+        {% endfor %}
         {% empty %}
-            <p class="text-center text-gray-500">Nenhum registro encontrado.</p> 
+        <p class="text-center text-gray-500">Nenhum registro encontrado.</p>
         {% endfor %}
     </div>
 </div>
