@@ -10,6 +10,7 @@ from django.utils import timezone
 from datetime import timedelta
 from collections import defaultdict
 import calendar
+from django.utils.translation import gettext
 from .forms import *
 from .models import *
 
@@ -145,12 +146,12 @@ class SaleListView(LoginRequiredMixin, ListView):
     ordering = ['-sale_date']
 
     range_options = {
-        '7d': ('Last 7 days', timedelta(days=7)),
-        '3d': ('Last 3 days', timedelta(days=3)),
-        '14d': ('Last 14 days', timedelta(days=14)),
-        '30d': ('Last 30 days', timedelta(days=30)),
-        '3m': ('Last 3 months', timedelta(days=90)),
-        '12m': ('Last 12 months', timedelta(days=365)),
+        '7d': ('Últimos 7 dias', timedelta(days=7)),
+        '3d': ('Últimos 3 dias', timedelta(days=3)),
+        '14d': ('Últimos 14 dias', timedelta(days=14)),
+        '30d': ('Últimos 30 dias', timedelta(days=30)),
+        '3m': ('Últimos 3 meses', timedelta(days=90)),
+        '12m': ('Último 12 meses', timedelta(days=365)),
     }
 
     def get_queryset(self):
@@ -178,8 +179,9 @@ class SaleListView(LoginRequiredMixin, ListView):
             year = sale.sale_date.year
             month = sale.sale_date.month
             user = sale.user
+            sale.total_price = sale.quantity * sale.product.price
             grouped[user][(year, month)].append(sale)
-            totals[user][(year, month)] += sale.quantity * sale.product.price
+            totals[user][(year, month)] += sale.total_price
 
         grouped_sales = []
         for user in grouped:
@@ -188,7 +190,7 @@ class SaleListView(LoginRequiredMixin, ListView):
                 user_months.append({
                     'year': year,
                     'month': month,
-                    'month_name': calendar.month_name[month],
+                    'month_name': gettext(str(calendar.month_name[month])),
                     'sales': grouped[user][(year, month)],
                     'total': totals[user][(year, month)],
                 })
