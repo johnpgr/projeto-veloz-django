@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 from .forms import *
 from .models import *
 
@@ -43,7 +45,6 @@ class ProductListView(LoginRequiredMixin, ListView):
             queryset = queryset.annotate(
                 similarity=TrigramSimilarity('name', search_term)
             ).filter(similarity__gt=0.1).order_by('-similarity')
-        print(queryset.query)
 
         ordering = self.request.GET.get('ordering', None)
         if ordering:
@@ -101,11 +102,37 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
         self.object.delete()
         return HttpResponseRedirect(success_url)
 
-# Sale Views
 class SaleListView(LoginRequiredMixin, ListView):
     model = Sale
     template_name = 'sale_list.html'
     context_object_name = 'sales'
+    ordering = ['-sale_date']
+
+    range_options = {
+        '7d': ('Last 7 days', timedelta(days=7)),
+        '3d': ('Last 3 days', timedelta(days=3)),
+        '14d': ('Last 14 days', timedelta(days=14)),
+        '30d': ('Last 30 days', timedelta(days=30)),
+        '3m': ('Last 3 months', timedelta(days=90)),
+        '12m': ('Last 12 months', timedelta(days=365)),
+    }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        selected_range_key = self.request.GET.get('range', '7d')
+
+        if selected_range_key in self.range_options:
+            _, delta = self.range_options[selected_range_key]
+            start_date = timezone.now() - delta
+            queryset = queryset.filter(sale_date__gte=start_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['range_options'] = {k: v[0] for k, v in self.range_options.items()}
+        context['selected_range'] = self.request.GET.get('range', '7d')
+        return context
 
 class SaleCreateView(LoginRequiredMixin, CreateView):
     model = Sale

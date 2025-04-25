@@ -145,6 +145,20 @@ def seed_command(num_records: int):
     
     print("Products seeded successfully!")
 
+def seed_sales_command(num_records: int):
+    """Run Django seed_sales command"""
+    print(f"Seeding {num_records} sales...")
+    env = activate_venv()
+    command = f"python manage.py seed_sales --count={num_records}"
+    process = run_command(command, env=env)
+    process.wait()
+
+    if process.returncode != 0:
+        print("Failed to seed sales")
+        sys.exit(1)
+
+    print("Sales seeded successfully!")
+
 def main():
     parser = argparse.ArgumentParser(description="Development CLI tool")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -165,8 +179,10 @@ def main():
     migrate_parser = subparsers.add_parser("migrate", help="Run Django migrate")
 
     # Seed command
-    seed_parser = subparsers.add_parser("seed", help="Run Django seed_products command")
+    seed_parser = subparsers.add_parser("seed_products", help="Run Django seed_products command")
     seed_parser.add_argument("num_records", type=int, help="Number of records to seed")
+    seed_sales_parser = subparsers.add_parser("seed_sales", help="Run Django seed_sales command")
+    seed_sales_parser.add_argument("num_records", type=int, help="Number of sales records to seed")
     
     args = parser.parse_args()
     
@@ -180,8 +196,10 @@ def main():
         makemigrations_command()
     elif args.command == "migrate":
         migrate_command()
-    elif args.command == "seed":
+    elif args.command == "seed_products":
         seed_command(args.num_records)
+    elif args.command == "seed_sales":
+        seed_sales_command(args.num_records)
     else:
         parser.print_help()
 

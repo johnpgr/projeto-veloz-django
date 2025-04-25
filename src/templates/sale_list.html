@@ -5,10 +5,48 @@
 <div class="p-4 sm:p-6 md:p-12 container mx-auto">
     <div class="flex justify-between items-center mb-4">
         <span id="search-spinner" class="htmx-indicator loading loading-spinner loading-sm"></span>
+        <!-- Date Range Filter Dropdown -->
+        <form method="get" class="flex items-center space-x-2">
+            <select name="range" class="select select-bordered select-sm"
+                    onchange="this.form.submit()">
+                {% for key, display_text in range_options.items %}
+                    <option value="{{ key }}" {% if key == selected_range %}selected{% endif %}>
+                        {{ display_text }}
+                    </option>
+                {% endfor %}
+            </select>
+            <noscript><button type="submit" class="btn btn-sm">Filter</button></noscript>
+        </form>
         <a href="{% url 'sale-create' %}" class="btn btn-primary">
             Nova Venda
         </a>
     </div>
-    {% include 'partials/sale_list_table.html' %}
+    <div class="space-y-6">
+        {% regroup sales by sale_date.year as sales_by_year %}
+        {% for year_group in sales_by_year %}
+            {% regroup year_group.list by sale_date.month as sales_by_month %}
+            {% for month_group in sales_by_month %}
+                <div class="divider divider-start text-xl font-semibold my-6">
+                    {{ month_group.list.0.sale_date|date:"F Y" }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for sale in month_group.list %}
+                    <div class="card bg-base-200 shadow-md">
+                        <div class="card-body p-4">
+                            <h3 class="card-title text-lg">{{ sale.product.name }}</h3>
+                            <p>Quantity: <span class="font-medium">{{ sale.quantity }}</span></p>
+                            <p>Sold by: <span class="font-medium">{{ sale.user.username }}</span></p>
+                            <div class="card-actions justify-end">
+                                <span class="text-sm text-gray-500">{{ sale.sale_date|date:"d, M" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% empty %}
+            <p class="text-center text-gray-500">No sales recorded yet.</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
