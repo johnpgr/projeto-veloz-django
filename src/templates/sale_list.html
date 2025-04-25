@@ -15,7 +15,7 @@
                     </option>
                 {% endfor %}
             </select>
-            <noscript><button type="submit" class="btn btn-sm">Filter</button></noscript>
+            <noscript><button type="submit" class="btn btn-sm">Filtro</button></noscript>
         </form>
         <a href="{% url 'sale-create' %}" class="btn btn-primary">
             Nova Venda
@@ -34,8 +34,8 @@
                     <div class="card bg-base-200 shadow-md">
                         <div class="card-body p-4">
                             <h3 class="card-title text-lg">{{ sale.product.name }}</h3>
-                            <p>Quantity: <span class="font-medium">{{ sale.quantity }}</span></p>
-                            <p>Sold by: <span class="font-medium">{{ sale.user.username }}</span></p>
+                            <p>Quantia: <span class="font-medium">{{ sale.quantity }}</span></p>
+                            <p>Vendido por: <span class="font-medium">{{ sale.user.username }}</span></p>
                             <div class="card-actions justify-end">
                                 <span class="text-sm text-gray-500">{{ sale.sale_date|date:"d, M" }}</span>
                             </div>
@@ -45,7 +45,7 @@
                 </div>
             {% endfor %}
         {% empty %}
-            <p class="text-center text-gray-500">No sales recorded yet.</p>
+            <p class="text-center text-gray-500">Nenhum registro encontrado.</p> 
         {% endfor %}
     </div>
 </div>

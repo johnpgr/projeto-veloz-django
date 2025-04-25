@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import connection
 from src.models import Sale, Product, User
 from faker import Faker
 from django.utils import timezone

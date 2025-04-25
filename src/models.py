@@ -1,3 +1,4 @@
+from django.utils import timezone   
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -54,7 +55,7 @@ class Sale(models.Model):
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sales')
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    sale_date = models.DateTimeField(auto_now_add=True)
+    sale_date = models.DateTimeField(default=timezone.now)   
 
     def __str__(self) -> str:
         return f"Sale of {self.product.name} - Qty: {self.quantity}"
