@@ -4,74 +4,44 @@
 {% block content %}
 <div class="p-4 md:p-8">
     <div class="max-w-2xl mx-auto">
-        <form hx-post="{% url 'api-sale-create' %}"
-            x-data="initSaleForm()"
-            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-        >
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ sale_form.management_form }}
+            {{ formset.management_form }}
+
+            <div id="sale-items">
+                {% for form in formset %}
+                    <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
+                        <div class="flex items-center justify-between">
+                            <label class="label">
+                                <span class="label-text text-sm">Produto</span>
+                            </label>
+                            {% if forloop.counter > 1 %}
+                            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="removeForm(this)">
+                                ✕
+                            </button>
+                            {% endif %}
+                        </div>
+                        {{ form.product }}
+                        {{ form.quantity }}
+                        {% if form.errors %}
+                            <div class="text-red-500 text-xs">
+                                {{ form.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
             <div class="mb-4">
-                <button type="button" class="btn btn-outline btn-sm" @click="addItem()">
+                <button type="button" class="btn btn-outline btn-sm" id="add-item-btn">
                     + Adicionar Item
                 </button>
             </div>
 
-            <template x-for="(item, index) in items" :key="index">
-                <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
-                    <!-- Product Selection -->
-                    <div class="flex items-center justify-between">
-                        <label class="label">
-                            <span class="label-text text-sm">Produto</span>
-                        </label>
-                        <button type="button" class="btn btn-ghost btn-xs btn-circle" @click="removeItem(index)"
-                            x-show="items.length > 1">
-                            ✕
-                        </button>
-                    </div>
-
-                    <select 
-                        x-model="item.product"
-                        class="select select-bordered w-full"
-                        @change="updateStockLimit(index, $event)"
-                    >
-                        <option value="">Selecione um produto</option>
-                        {% for product in product_list %}
-                        <option value="{{ product.pk }}" data-stock="{{ product.stock }}">
-                            {{ product.name }} ({{ product.stock }} disponível)
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                    <div class="join mt-2">
-                        <button 
-                            type="button"
-                            class="btn join-item"
-                            @click="item.quantity = Math.max(1, item.quantity - 1)" :disabled="!item.product"
-                        >
-                            -
-                        </button>
-                        <input 
-                            type="number"
-                            x-model.number="item.quantity"
-                            min="1"
-                            :max="item.stockLimit"
-                            :disabled="!item.product"
-                            class="input input-bordered join-item w-24 text-center"
-                        >
-                        <button 
-                            type="button"
-                            class="btn join-item"
-                            @click="item.quantity = Math.min(item.stockLimit, item.quantity + 1)"
-                            :disabled="!item.product"
-                        >
-                            +
-                        </button>
-                    </div>
-                </div>
-            </template>
-            </fieldset>
-
             <div class="flex justify-end space-x-2">
                 <a href="{% url 'sale-list' %}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary" :disabled="!items.some(item => item.product)">
+                <button type="submit" class="btn btn-primary">
                     Salvar
                 </button>
             </div>
@@ -79,5 +49,36 @@
     </div>
 </div>
 
-<script src="{% static 'js/sale-create.js' %}"></script>
+<script>
+document.getElementById('add-item-btn').addEventListener('click', function() {
+    const saleItems = document.getElementById('sale-items');
+    const totalForms = document.querySelector('[name="items-TOTAL_FORMS"]');
+    const currentCount = parseInt(totalForms.value);
+    const emptyForm = document.getElementById('empty-form').innerHTML.replace(/__prefix__/g, currentCount);
+    saleItems.insertAdjacentHTML('beforeend', emptyForm);
+    totalForms.value = currentCount + 1;
+});
+
+function removeForm(btn) {
+    btn.closest('.mb-4').remove();
+}
+</script>
+
+<!-- Hidden empty form template for JS add -->
+<div id="empty-form" style="display:none;">
+    {% with form=formset.empty_form %}
+    <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
+        <div class="flex items-center justify-between">
+            <label class="label">
+                <span class="label-text text-sm">Produto</span>
+            </label>
+            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="removeForm(this)">
+                ✕
+            </button>
+        </div>
+        {{ form.product }}
+        {{ form.quantity }}
+    </div>
+    {% endwith %}
+</div>
 {% endblock %}

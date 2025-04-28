@@ -1,4 +1,4 @@
-from django.db import connection
+from django.db import transaction
 from django.shortcuts import redirect, render
 from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.postgres.search import TrigramSimilarity
@@ -9,19 +9,18 @@ from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
 from collections import defaultdict
-import calendar
+from django.forms import modelform_factory
 from django.utils.translation import gettext
 from .forms import *
 from .models import *
+import calendar
 
-# Add this new view function
 def IndexRedirectView(request):
     if request.user.is_authenticated:
         return redirect('product-list')
     else:
         return redirect('login')
 
-# Product Views
 class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'product_list.html'
@@ -107,39 +106,6 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
         return HttpResponseRedirect(success_url)
 
 class SaleListView(LoginRequiredMixin, ListView):
-    """
-    Uma view que exibe uma lista de vendas agrupadas por usuário e mês.
-    Requer autenticação do usuário para acesso.
-
-    Atributos:
-        model: Modelo Sale (Venda)
-        template_name: Caminho para o template de lista de vendas
-        context_object_name: Nome usado para o queryset de vendas nos templates
-        ordering: Ordena vendas por data de venda decrescente
-        range_options: Dicionário de filtros de intervalo de tempo no formato:
-            chave: identificador do intervalo
-            valor: tupla de (nome de exibição, timedelta)
-
-    Funcionalidades:
-        - Filtra vendas por intervalo de data (padrão: últimos 7 dias)
-        - Agrupa vendas por usuário e mês
-        - Calcula totais mensais por usuário
-        - Suporta múltiplas opções de intervalo de tempo (3d, 7d, 14d, 30d, 3m, 12m)
-        - Usa select_related para otimizar consultas ao banco de dados
-    
-    Dados de Contexto:
-        - sales: Queryset filtrado de objetos Sale (Venda)
-        - range_options: Dicionário de opções de intervalo de data disponíveis
-        - selected_range: Intervalo de data atualmente selecionado
-        - grouped_sales: Lista de dicionários contendo:
-            - user: Objeto Usuário
-            - months: Lista de dicionários contendo:
-                - year: Ano da venda
-                - month: Número do mês da venda
-                - month_name: Nome do mês
-                - sales: Lista de vendas para aquele mês
-                - total: Valor total de vendas para aquele mês
-    """
     model = Sale
     template_name = 'sale_list.html'
     context_object_name = 'sales'
@@ -163,7 +129,6 @@ class SaleListView(LoginRequiredMixin, ListView):
             start_date = timezone.now() - delta
             queryset = queryset.filter(sale_date__gte=start_date)
 
-        queryset = queryset.select_related('user')
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -204,18 +169,52 @@ class SaleListView(LoginRequiredMixin, ListView):
 
 class SaleCreateView(LoginRequiredMixin, CreateView):
     model = Sale
-    form_class = SaleItemForm
     template_name = 'sale_form.html'
     success_url = reverse_lazy('sale-list')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['product_list'] = Product.objects.filter(is_active=True, stock__gt=0)
-        if self.request.POST:
-            context['formset'] = SaleItemFormSet(self.request.POST)
-        else:
-            context['formset'] = SaleItemFormSet()
-        return context
+    def get(self, request, *args, **kwargs):
+        sale_form = modelform_factory(Sale, fields=[])()
+        formset = SaleItemFormSet()
+        product_list = Product.objects.filter(is_active=True, stock__gt=0)
+        return render(request, self.template_name, {
+            'sale_form': sale_form,
+            'formset': formset,
+            'product_list': product_list,
+        })
+
+    def post(self, request, *args, **kwargs):
+        sale_form = modelform_factory(Sale, fields=[])(
+            request.POST
+        )
+        formset = SaleItemFormSet(request.POST)
+        product_list = Product.objects.filter(is_active=True, stock__gt=0)
+        if formset.is_valid():
+            with transaction.atomic():
+                sale = Sale.objects.create(user=request.user)
+                items = formset.save(commit=False)
+                for item in items:
+                    product = item.product
+                    if item.quantity > product.stock:
+                        formset.errors[items.index(item)]['quantity'] = [
+                            f"Estoque insuficiente para {product.name} (disponível: {product.stock})"
+                        ]
+                        transaction.set_rollback(True)
+                        messages.error(request, f"Estoque insuficiente para {product.name}.")
+                        return render(request, self.template_name, {
+                            'sale_form': sale_form,
+                            'formset': formset,
+                            'product_list': product_list,
+                        })
+                    item.sale = sale
+                    item.save()
+                    product.stock -= item.quantity
+                    product.save()
+                return redirect(self.success_url)
+        return render(request, self.template_name, {
+            'sale_form': sale_form,
+            'formset': formset,
+            'product_list': product_list,
+        })
 
 def SignupView(request):
     if request.method == 'POST':

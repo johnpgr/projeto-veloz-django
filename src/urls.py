@@ -1,7 +1,6 @@
 from django.urls import path
 from django.urls import path, include
 from .views import *
-from .api import create_sale_api
 
 urlpatterns = [
     path('products/', ProductListView.as_view(), name='product-list'),
@@ -10,7 +9,6 @@ urlpatterns = [
     path('products/<uuid:pk>/delete/', ProductDeleteView.as_view(), name='product-delete'),
     path('sales/', SaleListView.as_view(), name='sale-list'),
     path('sales/create/', SaleCreateView.as_view(), name='sale-create'),
-    path('api/sales/create', create_sale_api, name='api-sale-create'),
     path('accounts/', include('django.contrib.auth.urls')), # Add authentication URLs
     path('accounts/signup/', SignupView, name='signup'),
 ]
