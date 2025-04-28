@@ -53,9 +53,15 @@ class Sale(models.Model):
         on_delete=models.CASCADE,
         related_name='sales'
     )
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sales')
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    sale_date = models.DateTimeField(default=timezone.now)   
+    sale_date = models.DateTimeField(default=timezone.now)
 
     def __str__(self) -> str:
-        return f"Sale of {self.product.name} - Qty: {self.quantity}"
+        return f"Sale {self.id} by {self.user.username}"
+
+class SaleItem(models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity} (Sale {self.sale.id})"

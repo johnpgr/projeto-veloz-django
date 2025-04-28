@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import Product, Sale, User
+from .models import Product, Sale, User, SaleItem
 
 class UserSignupForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -44,9 +44,9 @@ class ProductForm(forms.ModelForm):
                 raise ValidationError("A imagem não pode ter mais que 5MB.")
         return image
 
-class SaleForm(forms.ModelForm):
+class SaleItemForm(forms.ModelForm):
     class Meta:
-        model = Sale
+        model = SaleItem
         fields = ['product', 'quantity']
         widgets = {
             'product': forms.Select(attrs={'class': 'select select-bordered w-full'}),
@@ -60,3 +60,7 @@ class SaleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['product'].queryset = Product.objects.filter(is_active=True)
+
+SaleItemFormSet = forms.inlineformset_factory(
+    Sale, SaleItem, form=SaleItemForm, extra=1, can_delete=True
+)

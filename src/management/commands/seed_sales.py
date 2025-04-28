@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import connection
-from src.models import Sale, Product, User
+from src.models import Sale, Product, SaleItem, User
 from faker import Faker
 from django.utils import timezone
 from datetime import timedelta
@@ -41,29 +40,47 @@ class Command(BaseCommand):
         start_date = end_date - timedelta(days=365)
 
         sales_to_create = []
+        saleitems_to_create = []
         for _ in range(count):
             user_id = random.choice(user_ids)
-            product_id = random.choice(product_ids)
-            quantity = random.randint(1, 5) # Random quantity between 1 and 5
-            random_date = fake.date_time_between(start_date=start_date, end_date=end_date, tzinfo=timezone.get_current_timezone())
+            random_date = fake.date_time_between(
+                start_date=start_date, end_date=end_date, tzinfo=timezone.get_current_timezone()
+            )
+            sale = Sale(
+                user_id=user_id,
+                sale_date=random_date,
+            )
+            sales_to_create.append(sale)
 
-            sales_to_create.append(
-                Sale(
-                    user_id=user_id,
-                    product_id=product_id,
-                    quantity=quantity,
-                    sale_date=random_date,
+        # Bulk create sales to get their IDs
+        Sale.objects.bulk_create(sales_to_create)
+        created_sales = Sale.objects.filter(
+            user_id__in=user_ids, sale_date__gte=start_date, sale_date__lte=end_date
+        ).order_by('-sale_date')[:count]
+
+        for sale in created_sales:
+            # Each sale will have 1-3 items
+            num_items = random.randint(1, 3)
+            chosen_products = random.sample(product_ids, min(num_items, len(product_ids)))
+            for product_id in chosen_products:
+                quantity = random.randint(1, 5)
+                saleitems_to_create.append(
+                    SaleItem(
+                        sale=sale,
+                        product_id=product_id,
+                        quantity=quantity,
+                    )
                 )
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f'Created: Sale for {random_date.strftime("%Y-%m-%d")} - User ID {user_id}, Product ID {product_id}, Quantity {quantity}')
-            )
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Created: Sale {sale.id} for User ID {sale.user_id}, Product ID {product_id}, Quantity {quantity}'
+                    )
+                )
 
         try:
-            # Use bulk_create for efficiency
-            Sale.objects.bulk_create(sales_to_create)
+            SaleItem.objects.bulk_create(saleitems_to_create)
             self.stdout.write(
-                self.style.SUCCESS(f'\nSuccessfully processed {count} sales')
+                self.style.SUCCESS(f'\nSuccessfully processed {count} sales with items')
             )
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error creating sales: {e}'))

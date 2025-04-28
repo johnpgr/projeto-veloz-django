@@ -56,26 +56,75 @@
                 </div>
             </div>
             <div x-show="open" class="px-4 flex flex-col gap-2">
-                {% for sale in month.sales %}
-                <div>
-                    <div class="flex gap-2 items-center">
-                        <span class="font-semibold">
-                            {% if group.user.id == request.user.id %}
-                            Você
-                            {% else %}
-                            {{ group.user.username }}
-                            {% endif %}
-                        </span>
-                        <span class="text-sm text-base-content/70">vendeu</span>
-                        <a href="{% url 'product-update' sale.product.id %}"><h3 class="font-semibold hover:underline">{{ sale.product.name }}</h3></a>
-                        <span class="text-sm text-base-content/70">Quantia: {{ sale.quantity }}</span>
-                        <div class="ml-auto flex items-center gap-2">
-                            <span class="font-semibold text-sm">+ R$ {{ sale.total_price|floatformat:2 }}</span>
-                            <span class="text-sm text-base-content/70">{{ sale.sale_date|date:"d \d\e M" }}</span>
+            {% for sale in month.sales %}
+            <div>
+                <div class="flex gap-2 items-center">
+                    <span class="font-semibold">
+                        {% if group.user.id == request.user.id %}
+                        Você
+                        {% else %}
+                        {{ group.user.username }}
+                        {% endif %}
+                    </span>
+                    <span class="text-sm text-base-content/70">vendeu</span>
+                    <div class="flex flex-col gap-1" x-data="{ showDetails: false }">
+                        {% if sale.items.all|length > 1 %}
+                        <div class="relative">
+                            <div 
+                                class="border border-base-300 bg-base-200 hover:bg-base-300 text-sm px-2 rounded-lg text-primary cursor-pointer transition-colors" 
+                                @mouseenter="showDetails = true" 
+                                @mouseleave="showDetails = false"
+                            >
+                            {{ sale.items.all|length }} Produtos
+                            </div>
+                            <div 
+                                x-show="showDetails" 
+                                @mouseenter="showDetails = true" 
+                                @mouseleave="showDetails = false" 
+                                class="absolute left-0 top-full mt-1 z-10 bg-base-100 shadow-lg rounded border border-base-300 p-4 min-w-96"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                            >
+                                {% for item in sale.items.all %}
+                                <div class="flex items-center justify-between">
+                                    {% if item.product.id %}
+                                    <a href="{% url 'product-update' item.product.id %}">
+                                        <h3 class="font-semibold text-sm hover:underline">{{ item.product.name }}</h3>
+                                    </a>
+                                    {% else %}
+                                    <h3 class="font-semibold text-sm">{{ item.product.name }}</h3>
+                                    {% endif %}
+                                    <span class="text-sm text-base-content/70">x{{ item.quantity }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
+                        {% else %}
+                        {% for item in sale.items.all %}
+                        <div class="flex gap-2 items-center">
+                            {% if item.product.id %}
+                            <a href="{% url 'product-update' item.product.id %}">
+                                <h3 class="font-semibold hover:underline">{{ item.product.name }}</h3>
+                            </a>
+                            {% else %}
+                            <h3 class="font-semibold">{{ item.product.name }}</h3>
+                            {% endif %}
+                            <span class="text-sm text-base-content/70">x{{ item.quantity }}</span>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="ml-auto flex items-center gap-2">
+                        <span class="font-semibold text-sm">+ R$ {{ sale.total_price|floatformat:2 }}</span>
+                        <span class="text-sm text-base-content/70">{{ sale.sale_date|date:"d \d\e M" }}</span>
                     </div>
                 </div>
-                {% endfor %}
+            </div>
+            {% endfor %}
             </div>
         </div>
         {% endfor %}

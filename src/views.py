@@ -40,8 +40,8 @@ class ProductListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.annotate(
-            total_revenue=models.Sum(models.F('sales__quantity') * models.F('price'), default=0),
-            total_sold=models.Sum('sales__quantity', default=0),
+            total_revenue=models.Sum(models.F('saleitem__quantity') * models.F('price'), default=0),
+            total_sold=models.Sum('saleitem__quantity', default=0),
         )
 
         search_term = self.request.GET.get('search', None)
@@ -163,7 +163,7 @@ class SaleListView(LoginRequiredMixin, ListView):
             start_date = timezone.now() - delta
             queryset = queryset.filter(sale_date__gte=start_date)
 
-        queryset = queryset.select_related('user', 'product')
+        queryset = queryset.select_related('user')
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -179,7 +179,7 @@ class SaleListView(LoginRequiredMixin, ListView):
             year = sale.sale_date.year
             month = sale.sale_date.month
             user = sale.user
-            sale.total_price = sale.quantity * sale.product.price
+            sale.total_price = sum(item.quantity * item.product.price for item in sale.items.all())
             grouped[user][(year, month)].append(sale)
             totals[user][(year, month)] += sale.total_price
 
@@ -204,20 +204,41 @@ class SaleListView(LoginRequiredMixin, ListView):
 
 class SaleCreateView(LoginRequiredMixin, CreateView):
     model = Sale
-    form_class = SaleForm
+    form_class = SaleItemForm
     template_name = 'sale_form.html'
     success_url = reverse_lazy('sale-list')
 
-    def form_valid(self, form):
-        sale = form.save(commit=False)
-        product = sale.product
-        if product.stock >= sale.quantity:
-            product.stock -= sale.quantity
-            product.save()
-            return super().form_valid(form)
-        form.add_error('quantity', 'Quantia excede o estoque disponível.')
-        return self.form_invalid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = SaleItemFormSet(self.request.POST)
+        else:
+            context['formset'] = SaleItemFormSet()
+        context['is_create'] = True
+        return context
 
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            sale = form.save(commit=False)
+            sale.user = self.request.user
+            sale.save()
+            formset.instance = sale
+            for item_form in formset:
+                if item_form.cleaned_data and not item_form.cleaned_data.get('DELETE', False):
+                    product = item_form.cleaned_data['product']
+                    quantity = item_form.cleaned_data['quantity']
+                    if product.stock < quantity:
+                        formset.errors.append({'quantity': f'Estoque insuficiente para {product.name}.'})
+                        return self.form_invalid(form)
+            formset.save()
+            # Update product stock
+            for item in sale.items.all():
+                item.product.stock -= item.quantity
+                item.product.save()
+            return super().form_valid(form)
+        return self.form_invalid(form)
 def SignupView(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
