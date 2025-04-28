@@ -49,8 +49,15 @@ class SaleItemForm(forms.ModelForm):
         model = SaleItem
         fields = ['product', 'quantity']
         widgets = {
-            'product': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'quantity': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
+            'product': forms.Select(attrs={
+                'class': 'select select-bordered w-full',
+                'x-on:change': 'updateStockLimit($el)'
+            }),
+            'quantity': forms.NumberInput(attrs={
+                'class': 'input input-bordered join-item w-24 text-center',
+                'min': '1',
+                'x-bind:max': 'stockLimit'
+            }),
         }
         labels = {
             'product': 'Produto',
@@ -59,7 +66,7 @@ class SaleItemForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['product'].queryset = Product.objects.filter(is_active=True)
+        self.fields['product'].queryset = Product.objects.filter(is_active=True, stock__gt=0)
 
 SaleItemFormSet = forms.inlineformset_factory(
     Sale, SaleItem, form=SaleItemForm, extra=1, can_delete=True

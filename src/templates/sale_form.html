@@ -4,38 +4,80 @@
 {% block content %}
 <div class="p-4 md:p-8">
     <div class="max-w-2xl mx-auto">
-        <form method="post">
-            {% csrf_token %}
-            <fieldset>
-                <legend class="text-xl font-bold mb-6">{{ is_create|yesno:"Nova,Editar" }} Venda</legend>
-                {{ form.non_field_errors }}
-                {{ formset.management_form }}
-                {% for form_item in formset %}
-                <div class="mb-4 flex flex-col w-full gap-1 border-b pb-4">
-                    {% for field in form_item.visible_fields %}
-                    <label class="label">
-                        <span class="label-text text-sm">{{ field.label }}</span>
-                    </label>
-                    {{ field }}
-                    {% if field.errors %}
-                    <label class="label">
-                        <span class="label-text-alt text-red-500">{{ field.errors|striptags }}</span>
-                    </label>
-                    {% endif %}
-                    {% endfor %}
-                    {% if form_item.can_delete %}
-                        <div>
-                            {{ form_item.DELETE }} <span class="text-sm">Remover</span>
-                        </div>
-                    {% endif %}
+        <form hx-post="{% url 'api-sale-create' %}"
+            x-data="initSaleForm()"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        >
+            <div class="mb-4">
+                <button type="button" class="btn btn-outline btn-sm" @click="addItem()">
+                    + Adicionar Item
+                </button>
+            </div>
+
+            <template x-for="(item, index) in items" :key="index">
+                <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
+                    <!-- Product Selection -->
+                    <div class="flex items-center justify-between">
+                        <label class="label">
+                            <span class="label-text text-sm">Produto</span>
+                        </label>
+                        <button type="button" class="btn btn-ghost btn-xs btn-circle" @click="removeItem(index)"
+                            x-show="items.length > 1">
+                            ✕
+                        </button>
+                    </div>
+
+                    <select 
+                        x-model="item.product"
+                        class="select select-bordered w-full"
+                        @change="updateStockLimit(index, $event)"
+                    >
+                        <option value="">Selecione um produto</option>
+                        {% for product in product_list %}
+                        <option value="{{ product.pk }}" data-stock="{{ product.stock }}">
+                            {{ product.name }} ({{ product.stock }} disponível)
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="join mt-2">
+                        <button 
+                            type="button"
+                            class="btn join-item"
+                            @click="item.quantity = Math.max(1, item.quantity - 1)" :disabled="!item.product"
+                        >
+                            -
+                        </button>
+                        <input 
+                            type="number"
+                            x-model.number="item.quantity"
+                            min="1"
+                            :max="item.stockLimit"
+                            :disabled="!item.product"
+                            class="input input-bordered join-item w-24 text-center"
+                        >
+                        <button 
+                            type="button"
+                            class="btn join-item"
+                            @click="item.quantity = Math.min(item.stockLimit, item.quantity + 1)"
+                            :disabled="!item.product"
+                        >
+                            +
+                        </button>
+                    </div>
                 </div>
-                {% endfor %}
+            </template>
             </fieldset>
+
             <div class="flex justify-end space-x-2">
                 <a href="{% url 'sale-list' %}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-primary" :disabled="!items.some(item => item.product)">
+                    Salvar
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<script src="{% static 'js/sale-create.js' %}"></script>
 {% endblock %}

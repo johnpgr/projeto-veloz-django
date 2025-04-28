@@ -210,35 +210,13 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['product_list'] = Product.objects.filter(is_active=True, stock__gt=0)
         if self.request.POST:
             context['formset'] = SaleItemFormSet(self.request.POST)
         else:
             context['formset'] = SaleItemFormSet()
-        context['is_create'] = True
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context['formset']
-        if formset.is_valid():
-            sale = form.save(commit=False)
-            sale.user = self.request.user
-            sale.save()
-            formset.instance = sale
-            for item_form in formset:
-                if item_form.cleaned_data and not item_form.cleaned_data.get('DELETE', False):
-                    product = item_form.cleaned_data['product']
-                    quantity = item_form.cleaned_data['quantity']
-                    if product.stock < quantity:
-                        formset.errors.append({'quantity': f'Estoque insuficiente para {product.name}.'})
-                        return self.form_invalid(form)
-            formset.save()
-            # Update product stock
-            for item in sale.items.all():
-                item.product.stock -= item.quantity
-                item.product.save()
-            return super().form_valid(form)
-        return self.form_invalid(form)
 def SignupView(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
