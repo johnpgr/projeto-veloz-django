@@ -176,7 +176,7 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         sale_form = modelform_factory(Sale, fields=[])()
         formset = SaleItemFormSet()
         product_list = Product.objects.filter(is_active=True, stock__gt=0)
-        return render(request, self.template_name, {
+        return render(request, self.template_name, { # type: ignore
             'sale_form': sale_form,
             'formset': formset,
             'product_list': product_list,
@@ -188,29 +188,34 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         )
         formset = SaleItemFormSet(request.POST)
         product_list = Product.objects.filter(is_active=True, stock__gt=0)
+        stock_error_raised = False
+
         if formset.is_valid():
-            with transaction.atomic():
-                sale = Sale.objects.create(user=request.user)
-                items = formset.save(commit=False)
-                for item in items:
-                    product = item.product
-                    if item.quantity > product.stock:
-                        formset.errors[items.index(item)]['quantity'] = [
-                            f"Estoque insuficiente para {product.name} (disponível: {product.stock})"
-                        ]
-                        transaction.set_rollback(True)
-                        messages.error(request, f"Estoque insuficiente para {product.name}.")
-                        return render(request, self.template_name, {
-                            'sale_form': sale_form,
-                            'formset': formset,
-                            'product_list': product_list,
-                        })
-                    item.sale = sale
-                    item.save()
-                    product.stock -= item.quantity
-                    product.save()
-                return redirect(self.success_url)
-        return render(request, self.template_name, {
+            try:
+                with transaction.atomic():
+                    sale = Sale.objects.create(user=request.user)
+                    items = formset.save(commit=False)
+                    for item in items:
+                        product = Product.objects.select_for_update().get(id=item.product.pk) # Lock the product row for update
+                        if item.quantity > product.stock:
+                            stock_error_raised = True
+                            item_form = formset.forms[items.index(item)]
+                            item_form.add_error('quantity', f"Estoque insuficiente para {product.name} (disponível: {product.stock})")
+                            messages.error(request, f"Estoque insuficiente para {product.name}.")
+                            raise transaction.TransactionManagementError("Insufficient stock detected.")
+                        item.sale = sale
+                        item.save()
+                        product.stock -= item.quantity
+                        product.save()
+                    return redirect(self.success_url) # type: ignore
+            except transaction.TransactionManagementError as e:
+                if not stock_error_raised:
+                    raise e # Means this is a different transaction error
+                pass # Transaction already rolled back
+            if not stock_error_raised:
+                return redirect(self.success_url) # type: ignore
+        # If the formset is not valid, we need to re-render the form with errors
+        return render(request, self.template_name, { # type: ignore
             'sale_form': sale_form,
             'formset': formset,
             'product_list': product_list,
