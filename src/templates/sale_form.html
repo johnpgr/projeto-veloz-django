@@ -4,44 +4,86 @@
 {% block content %}
 <div class="p-4 md:p-8">
     <div class="max-w-2xl mx-auto">
-        <form method="post" enctype="multipart/form-data">
+        <form
+            method="post"
+            enctype="multipart/form-data"
+        >
             {% csrf_token %}
             {{ sale_form.management_form }}
             {{ formset.management_form }}
 
             <div id="sale-items">
                 {% for form in formset %}
-                    <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
-                        <div class="flex items-center justify-between">
-                            <label class="label">
-                                <span class="label-text text-sm">Produto</span>
-                            </label>
-                            {% if forloop.counter > 1 %}
-                            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="removeForm(this)">
-                                ✕
-                            </button>
-                            {% endif %}
-                        </div>
-                        {{ form.product }}
-                        {{ form.quantity }}
-                        {% if form.errors %}
-                            <div class="text-red-500 text-xs">
-                                {{ form.errors }}
-                            </div>
+                <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
+                    <div class="flex items-center justify-between">
+                        <label class="label">
+                            <span class="label-text text-sm">Produto</span>
+                        </label>
+                        {% if forloop.counter > 1 %}
+                        <button
+                            type="button"
+                            class="btn btn-ghost btn-xs btn-circle"
+                            onclick="removeForm(this)"
+                        >
+                            ✕
+                        </button>
                         {% endif %}
                     </div>
+                    <select
+                        title="Selecione um produto"
+                        name="items-{{ forloop.counter0 }}-product"
+                        class="select select-bordered w-full mb-2"
+                        onchange="updateStockLimit(this)"
+                    >
+                        <option value="">---------</option>
+                        {% for product in product_list %}
+                        <option
+                            value="{{ product.id }}"
+                            data-stock="{{ product.stock }}"
+                        >
+                            {{ product.name }} - {{ product.stock }} em estoque
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label class="label">
+                        <span class="label-text text-sm">Quantidade</span>
+                    </label>
+                    <input
+                        type="number"
+                        placeholder="Quantidade"
+                        name="items-{{ forloop.counter0 }}-quantity"
+                        class="input input-bordered join-item w-24 text-center"
+                        min="1"
+                        value="{{ form.quantity.value|default:1 }}"
+                    />
+                    {% if form.errors %}
+                    <div class="text-red-500 text-xs">{{ form.errors }}</div>
+                    {% endif %}
+                </div>
                 {% endfor %}
             </div>
 
             <div class="mb-4">
-                <button type="button" class="btn btn-outline btn-sm" id="add-item-btn">
+                <button
+                    type="button"
+                    class="btn btn-outline btn-sm"
+                    id="add-item-btn"
+                >
                     + Adicionar Item
                 </button>
             </div>
 
             <div class="flex justify-end space-x-2">
-                <a href="{% url 'sale-list' %}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary">
+                <a
+                    href="{% url 'sale-list' %}"
+                    class="btn btn-outline"
+                >
+                    Cancelar
+                </a>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
                     Salvar
                 </button>
             </div>
@@ -50,35 +92,80 @@
 </div>
 
 <script>
-document.getElementById('add-item-btn').addEventListener('click', function() {
-    const saleItems = document.getElementById('sale-items');
-    const totalForms = document.querySelector('[name="items-TOTAL_FORMS"]');
-    const currentCount = parseInt(totalForms.value);
-    const emptyForm = document.getElementById('empty-form').innerHTML.replace(/__prefix__/g, currentCount);
-    saleItems.insertAdjacentHTML('beforeend', emptyForm);
-    totalForms.value = currentCount + 1;
-});
+    document.getElementById("add-item-btn").addEventListener("click", function () {
+        const saleItems = document.getElementById("sale-items")
+        const totalForms = document.querySelector('[name="items-TOTAL_FORMS"]')
+        const currentCount = parseInt(totalForms.value)
+        
+        const template = document.getElementById("empty-form")
+        const clone = template.content.cloneNode(true)
+        const content = clone.firstElementChild.innerHTML.replace(/__prefix__/g, currentCount)
+        clone.firstElementChild.innerHTML = content
+        
+        saleItems.appendChild(clone)
+        totalForms.value = currentCount + 1
+    })
 
-function removeForm(btn) {
-    btn.closest('.mb-4').remove();
-}
+    function removeForm(btn) {
+        btn.closest(".mb-4").remove()
+    }
+
+    function updateStockLimit(selectElement) {
+        const row = selectElement.closest('.mb-4');
+        const quantityInput = row.querySelector('input[type="number"]');
+        const selectedOption = selectElement.selectedOptions[0];
+        const stock = selectedOption.dataset.stock;
+        
+        quantityInput.max = stock;
+        if (parseInt(quantityInput.value) > stock) {
+            quantityInput.value = stock;
+        }
+    }
 </script>
 
-<!-- Hidden empty form template for JS add -->
-<div id="empty-form" style="display:none;">
+<template id="empty-form">
     {% with form=formset.empty_form %}
     <div class="mb-4 flex flex-col w-full pb-4 gap-1 relative">
         <div class="flex items-center justify-between">
             <label class="label">
                 <span class="label-text text-sm">Produto</span>
             </label>
-            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="removeForm(this)">
+            <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle"
+                onclick="removeForm(this)"
+            >
                 ✕
             </button>
         </div>
-        {{ form.product }}
-        {{ form.quantity }}
+        <select
+            title="Selecione um produto"
+            name="items-__prefix__-product"
+            class="select select-bordered w-full mb-2"
+            onchange="updateStockLimit(this)"
+        >
+            <option value="">---------</option>
+            {% for product in product_list %}
+            <option
+                value="{{ product.id }}"
+                data-stock="{{ product.stock }}"
+            >
+                {{ product.name }} - {{ product.stock }} em estoque
+            </option>
+            {% endfor %}
+        </select>
+        <label class="label">
+            <span class="label-text text-sm">Quantidade</span>
+        </label>
+        <input
+            type="number"
+            placeholder="Quantidade"
+            name="items-__prefix__-quantity"
+            class="input input-bordered join-item w-24 text-center"
+            min="1"
+            value="1"
+        />
     </div>
     {% endwith %}
-</div>
+</template>
 {% endblock %}

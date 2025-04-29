@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import Product, Sale, User, SaleItem
 
 class UserSignupForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
+    class Meta(UserCreationForm.Meta): # type: ignore
         model = User
 
 class CustomClearableFileInput(forms.ClearableFileInput):
@@ -48,17 +48,6 @@ class SaleItemForm(forms.ModelForm):
     class Meta:
         model = SaleItem
         fields = ['product', 'quantity']
-        widgets = {
-            'product': forms.Select(attrs={
-                'class': 'select select-bordered w-full',
-                'x-on:change': 'updateStockLimit($el)'
-            }),
-            'quantity': forms.NumberInput(attrs={
-                'class': 'input input-bordered join-item w-24 text-center',
-                'min': '1',
-                'x-bind:max': 'stockLimit'
-            }),
-        }
         labels = {
             'product': 'Produto',
             'quantity': 'Quantidade',
@@ -66,7 +55,7 @@ class SaleItemForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['product'].queryset = Product.objects.filter(is_active=True, stock__gt=0)
+        self.fields['product'].queryset = Product.objects.filter(is_active=True, stock__gt=0) # type: ignore
 
 SaleItemFormSet = forms.inlineformset_factory(
     Sale, SaleItem, form=SaleItemForm, extra=1, can_delete=True

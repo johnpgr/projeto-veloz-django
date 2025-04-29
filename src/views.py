@@ -112,8 +112,8 @@ class SaleListView(LoginRequiredMixin, ListView):
     ordering = ['-sale_date']
 
     range_options = {
-        '7d': ('Últimos 7 dias', timedelta(days=7)),
         '3d': ('Últimos 3 dias', timedelta(days=3)),
+        '7d': ('Últimos 7 dias', timedelta(days=7)),
         '14d': ('Últimos 14 dias', timedelta(days=14)),
         '30d': ('Últimos 30 dias', timedelta(days=30)),
         '3m': ('Últimos 3 meses', timedelta(days=90)),
