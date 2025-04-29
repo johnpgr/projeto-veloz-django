@@ -9,6 +9,7 @@ urlpatterns = [
     path('products/<uuid:pk>/delete/', ProductDeleteView.as_view(), name='product-delete'),
     path('sales/', SaleListView.as_view(), name='sale-list'),
     path('sales/create/', SaleCreateView.as_view(), name='sale-create'),
+    path('sales/add-item-form/', add_sale_item_form, name='add-sale-item-form'),
     path('accounts/', include('django.contrib.auth.urls')), # Add authentication URLs
     path('accounts/signup/', SignupView, name='signup'),
 ]

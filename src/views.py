@@ -221,6 +221,31 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
             'product_list': product_list,
         })
 
+def add_sale_item_form(request):
+    formset = SaleItemFormSet(prefix='items')
+    product_list = Product.objects.filter(is_active=True, stock__gt=0)
+    context = {
+        'form': formset.empty_form,
+        'product_list': product_list,
+        'formset': formset # Pass formset for can_delete check in partial
+    }
+    # We need to manually assign the prefix based on the expected next form index
+    # HTMX doesn't automatically know the next index like the template cloning did.
+    # We'll rely on JavaScript on the client-side to update the prefix/name attributes
+    # after the content is swapped in. Alternatively, pass the next index in the request.
+    # For simplicity now, we render with __prefix__ and let JS handle it if needed,
+    # but the current JS `updateFormCount` doesn't rename fields.
+    # A better approach might involve passing the current count via hx-vals
+    # and using it here to set the correct prefix.
+
+    form_index = request.GET.get('next_index', 0) # Get index from request
+    form = formset.empty_form
+    form.prefix = f'items-{form_index}' # Set the correct prefix
+
+    context['form'] = form
+
+    return render(request, 'partials/sale_item_form.html', context)
+
 def SignupView(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
