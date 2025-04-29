@@ -6,7 +6,7 @@
         <label class="label">
             <span class="label-text text-sm">Produto</span>
         </label>
-        {% if formset.can_delete and form.prefix != 'items-0' %}
+        {% if can_delete %}
         <button
             type="button"
             class="btn btn-ghost btn-xs btn-circle"

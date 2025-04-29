@@ -13,9 +13,7 @@
             {{ formset.management_form }}
 
             <div id="sale-items">
-                {% for form in formset %}
-                    {% include 'partials/sale_item_form.html' with form=form product_list=product_list %}
-                {% endfor %}
+                {% include 'partials/sale_item_form.html' with form=form product_list=product_list can_delete=False %}
             </div>
             <div class="mb-4">
                 <button
@@ -54,7 +52,7 @@
 <script>
     function getNextFormIndex() {
         const totalFormsInput = document.querySelector('[name="items-TOTAL_FORMS"]');
-        return parseInt(totalFormsInput.value); // The next index is the current total
+        return parseInt(totalFormsInput.value);
     }
 
     function updateFormCount() {

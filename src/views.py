@@ -227,7 +227,8 @@ def add_sale_item_form(request):
     context = {
         'form': formset.empty_form,
         'product_list': product_list,
-        'formset': formset # Pass formset for can_delete check in partial
+        'formset': formset,
+        'can_delete': True
     }
     # We need to manually assign the prefix based on the expected next form index
     # HTMX doesn't automatically know the next index like the template cloning did.
