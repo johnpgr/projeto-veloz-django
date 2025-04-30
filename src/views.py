@@ -1,19 +1,15 @@
-from django.db import transaction
 from django.shortcuts import redirect, render
-from django.http import HttpResponse,HttpResponseRedirect
-from django.contrib.postgres.search import TrigramSimilarity
+from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
-from collections import defaultdict
 from django.forms import modelform_factory
-from django.utils.translation import gettext
 from .forms import *
 from .models import *
-import calendar
+from .services import *
 
 def IndexRedirectView(request):
     if request.user.is_authenticated:
@@ -28,31 +24,12 @@ class ProductListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_paginate_by(self, queryset):
-        val = self.request.GET.get('per_page', 10)
-        try:
-            val = int(val)
-        except (ValueError, TypeError):
-            val = 10
-        return val
-
+        return int(self.request.GET.get('per_page', 10) or 10)
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = queryset.annotate(
-            total_revenue=models.Sum(models.F('saleitem__quantity') * models.F('price'), default=0),
-            total_sold=models.Sum('saleitem__quantity', default=0),
-        )
-
         search_term = self.request.GET.get('search', None)
-        if search_term:
-            queryset = queryset.annotate(
-                similarity=TrigramSimilarity('name', search_term)
-            ).filter(similarity__gt=0.1).order_by('-similarity')
-
         ordering = self.request.GET.get('ordering', None)
-        if ordering:
-            queryset = queryset.order_by(ordering)
-        return queryset
+        return ProductService.get_products_with_stats(search_term, ordering)
 
     def render_to_response(self, context, **response_kwargs):
         is_htmx_search = (
@@ -121,50 +98,20 @@ class SaleListView(LoginRequiredMixin, ListView):
     }
 
     def get_queryset(self):
-        queryset = super().get_queryset()
         selected_range_key = self.request.GET.get('range', '7d')
-
         if selected_range_key in self.range_options:
             _, delta = self.range_options[selected_range_key]
             start_date = timezone.now() - delta
-            queryset = queryset.filter(sale_date__gte=start_date)
-
-        return queryset
+            return SaleAnalyticsService.get_sales_by_date_range(start_date)
+        return Sale.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['range_options'] = {k: v[0] for k, v in self.range_options.items()}
         context['selected_range'] = self.request.GET.get('range', '7d')
-
+        
         sales = context['sales']
-        grouped = defaultdict(lambda: defaultdict(list))
-        totals = defaultdict(lambda: defaultdict(int))
-
-        for sale in sales:
-            year = sale.sale_date.year
-            month = sale.sale_date.month
-            user = sale.user
-            sale.total_price = sum(item.quantity * item.product.price for item in sale.items.all())
-            grouped[user][(year, month)].append(sale)
-            totals[user][(year, month)] += sale.total_price
-
-        grouped_sales = []
-        for user in grouped:
-            user_months = []
-            for (year, month) in sorted(grouped[user], reverse=True):
-                user_months.append({
-                    'year': year,
-                    'month': month,
-                    'month_name': gettext(str(calendar.month_name[month])),
-                    'sales': grouped[user][(year, month)],
-                    'total': totals[user][(year, month)],
-                })
-            grouped_sales.append({
-                'user': user,
-                'months': user_months,
-            })
-
-        context['grouped_sales'] = grouped_sales
+        context['grouped_sales'] = SaleAnalyticsService.group_sales_by_user_and_month(sales)
         return context
 
 class SaleCreateView(LoginRequiredMixin, CreateView):
@@ -173,55 +120,71 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('sale-list')
 
     def get(self, request, *args, **kwargs):
+        formset = SaleItemFormSet(prefix='items')
         sale_form = modelform_factory(Sale, fields=[])()
-        formset = SaleItemFormSet()
         product_list = Product.objects.filter(is_active=True, stock__gt=0)
-        return render(request, self.template_name, { # type: ignore
-            'sale_form': sale_form,
+        form = formset.empty_form
+        form.prefix = 'items-0'
+
+        assert self.template_name is not None, "Template name is not set"
+        return render(request, self.template_name, {
+            'form': form,
             'formset': formset,
+            'sale_form': sale_form,
             'product_list': product_list,
         })
 
-    def post(self, request, *args, **kwargs):
-        sale_form = modelform_factory(Sale, fields=[])(
-            request.POST
-        )
+    def get_product_list(self):
+        return Product.objects.filter(is_active=True, stock__gt=0)
+
+    def create_sale_form(self, data=None):
+        return modelform_factory(Sale, fields=[])(data)
+
+    def handle_form_errors(self, formset, error_msg, form_index):
+        item_form = formset.forms[form_index]
+        item_form.add_error('quantity', error_msg)
+        messages.error(self.request, error_msg)
+
+    def post(self, request):
+        sale_form = self.create_sale_form(request.POST)
         formset = SaleItemFormSet(request.POST)
-        product_list = Product.objects.filter(is_active=True, stock__gt=0)
-        stock_error_raised = False
+        items = []
+        
+        if not formset.is_valid():
+            return self.render_form_with_errors(sale_form, formset)
 
-        if formset.is_valid():
-            try:
-                with transaction.atomic():
-                    sale = Sale.objects.create(user=request.user)
-                    items = formset.save(commit=False)
-                    for item in items:
-                        product = Product.objects.select_for_update().get(id=item.product.pk) # Lock the product row for update
-                        if item.quantity > product.stock:
-                            stock_error_raised = True
-                            item_form = formset.forms[items.index(item)]
-                            item_form.add_error('quantity', f"Estoque insuficiente para {product.name} (disponível: {product.stock})")
-                            messages.error(request, f"Estoque insuficiente para {product.name}.")
-                            raise transaction.TransactionManagementError("Insufficient stock detected.")
-                        item.sale = sale
-                        item.save()
-                        product.stock -= item.quantity
-                        product.save()
-                    return redirect(self.success_url) # type: ignore
-            except transaction.TransactionManagementError as e:
-                if not stock_error_raised:
-                    raise e # Means this is a different transaction error
-                pass # Transaction already rolled back
-            if not stock_error_raised:
-                return redirect(self.success_url) # type: ignore
-        # If the formset is not valid, we need to re-render the form with errors
-        return render(request, self.template_name, { # type: ignore
-            'sale_form': sale_form,
-            'formset': formset,
-            'product_list': product_list,
-        })
+        try:
+            items = formset.save(commit=False)
+            assert isinstance(request.user, User), "Invalid user type"
+            SaleService.create_sale(request.user, items)
+            assert self.success_url is not None, "Success URL is not set"
+            return redirect(self.success_url)
+            
+        except ValidationError as e:
+            self.handle_form_errors(
+                formset, 
+                str(e), 
+                next(i for i, item in enumerate(items) if item.product.name in str(e))
+            )
+            return self.render_form_with_errors(sale_form, formset)
 
-def add_sale_item_form(request):
+    def render_form_with_errors(self, sale_form, formset):
+        form = formset.empty_form
+        form.prefix = 'items-0'
+        assert self.template_name is not None, "Template name is not set"
+        return render(
+            self.request,
+            self.template_name,
+            {
+                'form': form,
+                'sale_form': sale_form,
+                'formset': formset,
+                'product_list': self.get_product_list(),
+            }
+        )
+
+
+def SaleItemFormView(request):
     formset = SaleItemFormSet(prefix='items')
     product_list = Product.objects.filter(is_active=True, stock__gt=0)
     context = {
@@ -230,19 +193,9 @@ def add_sale_item_form(request):
         'formset': formset,
         'can_delete': True
     }
-    # We need to manually assign the prefix based on the expected next form index
-    # HTMX doesn't automatically know the next index like the template cloning did.
-    # We'll rely on JavaScript on the client-side to update the prefix/name attributes
-    # after the content is swapped in. Alternatively, pass the next index in the request.
-    # For simplicity now, we render with __prefix__ and let JS handle it if needed,
-    # but the current JS `updateFormCount` doesn't rename fields.
-    # A better approach might involve passing the current count via hx-vals
-    # and using it here to set the correct prefix.
-
-    form_index = request.GET.get('next_index', 0) # Get index from request
+    form_index = request.GET.get('next_index', 0)
     form = formset.empty_form
-    form.prefix = f'items-{form_index}' # Set the correct prefix
-
+    form.prefix = f'items-{form_index}'
     context['form'] = form
 
     return render(request, 'partials/sale_item_form.html', context)

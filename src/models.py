@@ -55,6 +55,14 @@ class Sale(models.Model):
     )
     sale_date = models.DateTimeField(default=timezone.now)
 
+    @property
+    def total_price(self) -> Decimal:
+        """Calculate the total price of the sale"""
+        return Decimal(sum(
+            item.quantity * item.product.price 
+            for item in self.items.all() # type: ignore
+        ))
+
     def __str__(self) -> str:
         return f"Sale {self.id} by {self.user.username}"
 
