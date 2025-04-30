@@ -1,4 +1,4 @@
-# Projeto CRUD de Produtos e Vendas - Veloz UNAMA
+# Projeto CRUD de Produtos e Vendas
 
 Este é um projeto Django que implementa um sistema CRUD (Criar, Ler, Atualizar, Deletar) para gerenciamento de produtos e registro de vendas. Ele utiliza Tailwind CSS para o frontend e PostgreSQL como banco de dados.
 
