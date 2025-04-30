@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, ListView, CreateView, UpdateView
+from django.views.generic import DeleteView, ListView, CreateView, UpdateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
@@ -11,11 +11,12 @@ from .forms import *
 from .models import *
 from .services import *
 
-def IndexRedirectView(request):
-    if request.user.is_authenticated:
-        return redirect('product-list')
-    else:
-        return redirect('login')
+class IndexRedirectView(View):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('product-list')
+        else:
+            return redirect('login')
 
 class ProductListView(LoginRequiredMixin, ListView):
     model = Product
@@ -122,7 +123,7 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         formset = SaleItemFormSet(prefix='items')
         sale_form = modelform_factory(Sale, fields=[])()
-        product_list = Product.objects.filter(is_active=True, stock__gt=0)
+        product_list = ProductService.get_active_products_in_stock()
         form = formset.empty_form
         form.prefix = 'items-0'
 
@@ -183,31 +184,39 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
             }
         )
 
+class SaleItemFormView(LoginRequiredMixin, View):
+    template_name = 'partials/sale_item_form.html'
 
-def SaleItemFormView(request):
-    formset = SaleItemFormSet(prefix='items')
-    product_list = Product.objects.filter(is_active=True, stock__gt=0)
-    context = {
-        'form': formset.empty_form,
-        'product_list': product_list,
-        'formset': formset,
-        'can_delete': True
-    }
-    form_index = request.GET.get('next_index', 0)
-    form = formset.empty_form
-    form.prefix = f'items-{form_index}'
-    context['form'] = form
+    def get(self, request, *args, **kwargs):
+        product_list = ProductService.get_active_products_in_stock()
+        formset = SaleItemFormSet(prefix='items')
+        form_index = request.GET.get('next_index', 0)
+        form = formset.empty_form
+        form.prefix = f'items-{form_index}'
 
-    return render(request, 'partials/sale_item_form.html', context)
+        return render(
+            request,
+            self.template_name,
+            {
+                'form': form,
+                'formset': formset,
+                'can_delete': True,
+                'product_list': product_list,
+            }
+        )
 
-def SignupView(request):
-    if request.method == 'POST':
+class SignupView(View):
+    template_name = 'registration/signup.html'
+
+    def get(self, request, *args, **kwargs):
+        form = UserSignupForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
         form = UserSignupForm(request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account created for {username}! You can now log in.')
             return redirect('login')
-    else:
-        form = UserSignupForm()
-    return render(request, 'registration/signup.html', {'form': form})
+        return render(request, self.template_name, {'form': form})

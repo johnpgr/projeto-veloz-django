@@ -9,7 +9,7 @@ urlpatterns = [
     path('products/<uuid:pk>/delete/', ProductDeleteView.as_view(), name='product-delete'),
     path('sales/', SaleListView.as_view(), name='sale-list'),
     path('sales/create/', SaleCreateView.as_view(), name='sale-create'),
-    path('sales/add-item-form/', SaleItemFormView, name='add-sale-item-form'),
+    path('sales/add-item-form/', SaleItemFormView.as_view(), name='add-sale-item-form'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/signup/', SignupView, name='signup'),
+    path('accounts/signup/', SignupView.as_view(), name='signup'),
 ]
