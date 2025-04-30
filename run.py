@@ -102,8 +102,8 @@ def prod_command():
     except KeyboardInterrupt:
         print("\nShutting down server...")
     finally:
-        if django_process.poll() is None:
-            os.killpg(os.getpgid(django_process.pid), signal.SIGTERM)
+        if django_process.poll() is None: # type: ignore
+            os.killpg(os.getpgid(django_process.pid), signal.SIGTERM) # type: ignore
 
 def makemigrations_command():
     """Run Django makemigrations"""
