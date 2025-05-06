@@ -14,19 +14,6 @@ from .models import Sale, Product, User, SaleItem
 class SaleService:
     @staticmethod
     def create_sale(user: User, items: list[SaleItem]) -> Sale:
-        """
-        Cria uma venda com os itens fornecidos e valida a disponibilidade de estoque
-        
-        Args:
-            user: O usuário que está criando a venda
-            items: Lista de instâncias de SaleItem (ainda não salvas)
-            
-        Returns:
-            Sale: A instância da venda criada
-            
-        Raises:
-            ValidationError: Se houver estoque insuficiente para qualquer produto
-        """
         with transaction.atomic():
             sale = Sale.objects.create(user=user)
             
@@ -53,7 +40,6 @@ class ProductService:
         search_term: Optional[str] = None,
         ordering: Optional[str] = None
     ) -> QuerySet[Product]:
-        """Obtem produtos com sua estatisticas de venda e filtros opcionais"""
         queryset = Product.objects.annotate(
             total_revenue=models.Sum(
                 models.F('saleitem__quantity') * models.F('price'),
@@ -74,20 +60,17 @@ class ProductService:
 
     @staticmethod
     def get_active_products_in_stock() -> QuerySet[Product]:
-        """Obtem apenas produtos ativos com estoque disponível"""
         return Product.objects.filter(is_active=True, stock__gt=0)
 
 class SaleAnalyticsService:
     @staticmethod
     def get_sales_by_date_range(start_date: datetime) -> QuerySet[Sale]:
-        """Obtem vendas filtrada por um range de data"""
         return Sale.objects.filter(
             sale_date__gte=start_date
         ).order_by('-sale_date')
 
     @staticmethod
     def group_sales_by_user_and_month(sales: QuerySet[Sale]) -> List[Dict[str, Any]]:
-        """Agrupa vendas por usuario e mes"""
         grouped: Dict[User, Dict[Tuple[int, int], List[Sale]]] = defaultdict(lambda: defaultdict(list))
         totals: Dict[User, Dict[Tuple[int, int], Decimal]] = defaultdict(lambda: defaultdict(Decimal))
 
@@ -102,7 +85,6 @@ class SaleAnalyticsService:
 
     @staticmethod
     def group_sales_by_month_and_user(sales: QuerySet[Sale]) -> List[Dict[str, Any]]:
-        """Group sales by month and then by user with totals"""
         grouped: Dict[Tuple[int, int], Dict[User, List[Sale]]] = defaultdict(lambda: defaultdict(list))
         totals: Dict[Tuple[int, int], Dict[User, Decimal]] = defaultdict(lambda: defaultdict(Decimal))
 
@@ -142,7 +124,6 @@ class SaleAnalyticsService:
         grouped: Dict[Tuple[int, int], Dict[User, List[Sale]]],
         totals: Dict[Tuple[int, int], Dict[User, Decimal]]
     ) -> List[Dict[str, Any]]:
-        """Format grouped sales data for template rendering"""
         formatted_sales = []
         for (year, month), user_sales_map in sorted(grouped.items(), key=lambda item: item[0], reverse=True):
             month_data = {
