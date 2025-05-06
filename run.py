@@ -145,6 +145,22 @@ def seed_command(num_records: int):
     
     print("Products seeded successfully!")
 
+def seed_users_command(num_records: int, password: Optional[str] = None):
+    """Run Django seed_users command"""
+    print(f"Seeding {num_records} users...")
+    env = activate_venv()
+    command = f"python manage.py seed_users --count={num_records}"
+    if password:
+        command += f" --password={password}"
+    process = run_command(command, env=env)
+    process.wait()
+
+    if process.returncode != 0:
+        print("Failed to seed users")
+        sys.exit(1)
+
+    print("Users seeded successfully!")
+
 def seed_sales_command(num_records: int):
     """Run Django seed_sales command"""
     print(f"Seeding {num_records} sales...")
@@ -183,6 +199,10 @@ def main():
     seed_parser.add_argument("num_records", type=int, help="Number of records to seed")
     seed_sales_parser = subparsers.add_parser("seed_sales", help="Run Django seed_sales command")
     seed_sales_parser.add_argument("num_records", type=int, help="Number of sales records to seed")
+
+    seed_users_parser = subparsers.add_parser("seed_users", help="Run Django seed_users command")
+    seed_users_parser.add_argument("num_records", type=int, help="Number of random users to create")
+    seed_users_parser.add_argument("--password", type=str, help="Password for the admin user and default for random users")
     
     args = parser.parse_args()
     
@@ -198,6 +218,8 @@ def main():
         migrate_command()
     elif args.command == "seed_products":
         seed_command(args.num_records)
+    elif args.command == "seed_users":
+        seed_users_command(args.num_records, args.password)
     elif args.command == "seed_sales":
         seed_sales_command(args.num_records)
     else:
