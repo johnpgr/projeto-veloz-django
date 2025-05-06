@@ -112,7 +112,7 @@ class SaleListView(LoginRequiredMixin, ListView):
         context['selected_range'] = self.request.GET.get('range', '7d')
         
         sales = context['sales']
-        context['grouped_sales'] = SaleAnalyticsService.group_sales_by_user_and_month(sales)
+        context['grouped_sales'] = SaleAnalyticsService.group_sales_by_month_and_user(sales)
         return context
 
 class SaleCreateView(LoginRequiredMixin, CreateView):

@@ -36,11 +36,11 @@
         class="htmx-indicator loading loading-spinner loading-sm"
     ></span>
     <div class="space-y-6">
-        {% for group in grouped_sales %}
-            {% for month in group.months %}
+        {% for month_group in grouped_sales %}
             <div class="mb-2">
-                <div class="font-bold text-xl mb-1">{{ month.month_name }} de {{ month.year }}</div>
+                <div class="font-bold text-xl mb-1">{{ month_group.month_name }} de {{ month_group.year }}</div>
             </div>
+            {% for user_sale_data in month_group.user_sales %}
             <div
                 class="flex flex-col gap-4 border border-base-300 rounded p-4"
                 x-data="{open: true}"
@@ -70,9 +70,9 @@
                     </span>
                     <div>
                         <div class="font-semibold text-lg">
-                            {% if group.user.id == request.user.id %} Você {% else %} {{ group.user.username }} {% endif %}
+                            {% if user_sale_data.user.id == request.user.id %} Você {% else %} {{ user_sale_data.user.username }} {% endif %}
                         </div>
-                        <span class="font-bold text-green-500">+ R$ {{ month.total|floatformat:2 }}</span>
+                        <span class="font-bold text-green-500">+ R$ {{ user_sale_data.total|floatformat:2 }}</span>
                     </div>
                     <div class="ml-auto">
                         <button
@@ -96,11 +96,11 @@
                     x-show="open"
                     class="px-4 flex flex-col gap-2"
                 >
-                    {% for sale in month.sales %}
+                    {% for sale in user_sale_data.sales %}
                     <div>
                         <div class="flex gap-2 items-center">
                             <span class="font-semibold">
-                                {% if group.user.id == request.user.id %} Você {% else %} {{ group.user.username }} {% endif %}
+                                {% if user_sale_data.user.id == request.user.id %} Você {% else %} {{ user_sale_data.user.username }} {% endif %}
                             </span>
                             <span class="text-sm text-base-content/70">vendeu</span>
                             <div
