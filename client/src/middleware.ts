@@ -1,3 +1,4 @@
+//FIXME: There is a infinite redirect loop here when a server action is called
 import { NextResponse, NextRequest } from 'next/server'
 
 const INTERNAL_API_URL = process.env.INTERNAL_API_URL || 'http://127.0.0.1:8000'

@@ -31,6 +31,7 @@ interface AuthProviderProps {
     initialUser: User | null // Allow passing initial user from server component
 }
 
+//TODO: remove client side fetchs and use server actions only for the functions here
 export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     const [user, setUser] = React.useState<User | null>(initialUser)
     const [isLoading, setIsLoading] = React.useState(!initialUser) // If initialUser is provided, not loading initially for that.
