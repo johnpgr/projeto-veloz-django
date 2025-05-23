@@ -3,8 +3,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production"
 // The Django backend service is named 'server' in docker-compose.yml and listens on port 8000.
 // For local development (outside Docker or when Docker server is mapped to localhost),
 const API_BASE_URL = IS_PRODUCTION
-    ? "http://server:8000/api" // Adjust '/api' if your Django URLs have a different prefix
-    : "http://localhost:8000/api" // Adjust '/api' accordingly
+    ? "http://server:8000"
+    : "http://localhost:8000"
 
 /**
  * A generic fetch wrapper for making API requests.
@@ -15,7 +15,6 @@ const API_BASE_URL = IS_PRODUCTION
 export async function fetchAPI<T = any>(
     endpoint: string,
     options: RequestInit = {},
-    next: NextFetchRequestConfig = {},
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
 
@@ -29,7 +28,6 @@ export async function fetchAPI<T = any>(
             ...defaultHeaders,
             ...options.headers,
         },
-        next,
     }
 
     try {
