@@ -1,9 +1,7 @@
-"use client"
-
 import React from "react"
-import { useAuth } from "../lib/auth-context"
-import type { UpdateProfileData } from "../lib/auth"
-import { updateProfileAction, type ActionResponse } from "../lib/actions" // Import server action and response type
+import type { UpdateProfileData, User } from "../lib/auth"
+import { AuthContext } from "~/lib/auth-context"
+import { useNavigate } from "react-router"
 
 interface SubmitButtonProps {
     isPending: boolean
@@ -21,74 +19,92 @@ function SubmitButton({ isPending }: SubmitButtonProps) {
     )
 }
 
-export function UserProfile() {
-    const { user, logout, refreshUser } = useAuth()
-    const initialState: ActionResponse = { success: false }
-    const [state, formAction] = React.useActionState(
-        updateProfileAction,
-        initialState,
-    )
-    const [isPending, startTransition] = React.useTransition()
-    const [isEditing, setIsEditing] = React.useState(false)
-    const [error, setError] = React.useState("")
-    const [success, setSuccess] = React.useState("")
+interface UserProfileFormActionState {
+    error?: string
+    success?: boolean
+    message?: string
+}
 
+const initialProfileFormState: UserProfileFormActionState = {
+    error: undefined,
+    success: false,
+    message: undefined,
+}
+
+export function UserProfile() {
+    const auth = React.use(AuthContext)!
+    const navigate = useNavigate()
+    const [isEditing, setIsEditing] = React.useState(false)
     const [formData, setFormData] = React.useState<UpdateProfileData>(() => ({
-        first_name: user?.first_name || "",
-        last_name: user?.last_name || "",
-        email: user?.email || "",
+        first_name: auth.user?.first_name || "",
+        last_name: auth.user?.last_name || "",
+        email: auth.user?.email || "",
     }))
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    async function updateProfileAction(
+        _: UserProfileFormActionState,
+        formPayload: FormData,
+    ): Promise<UserProfileFormActionState> {
+        const dataToUpdate: UpdateProfileData = {}
+        const email = formPayload.get("email") as string
+        const first_name = formPayload.get("first_name") as string
+        const last_name = formPayload.get("last_name") as string
+
+        if (email) dataToUpdate.email = email
+        if (first_name) dataToUpdate.first_name = first_name
+        if (last_name) dataToUpdate.last_name = last_name
+
+        try {
+            await auth.updateProfile(dataToUpdate)
+            return { success: true, message: "Profile updated successfully!" }
+        } catch (err: any) {
+            return {
+                error: err.message || "Failed to update profile",
+                success: false,
+            }
+        }
+    }
+
+    const [state, formAction, isPending] = React.useActionState(
+        updateProfileAction,
+        initialProfileFormState,
+    )
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         setFormData((prev) => ({
             ...prev,
             [e.target.name]: e.target.value,
         }))
     }
 
-    const handleLogout = async () => {
+    async function handleLogout() {
         try {
-            await logout()
+            await auth.logout().then(() => navigate("/", { replace: true }))
         } catch (err: any) {
             console.error("Logout error:", err)
         }
     }
 
-    const handleFormSubmit = async (
-        event: React.FormEvent<HTMLFormElement>,
-    ) => {
-        event.preventDefault()
-        const formPayload = new FormData()
-        Object.entries(formData).forEach(([key, value]) => {
-            if (value) {
-                formPayload.append(key, value)
-            }
-        })
-
-        startTransition(() => {
-            formAction(formPayload)
-        })
-    }
+    React.useEffect(() => {
+        if (auth.user) {
+            setFormData({
+                first_name: auth.user.first_name || "",
+                last_name: auth.user.last_name || "",
+                email: auth.user.email || "",
+            })
+        }
+    }, [auth.user])
 
     React.useEffect(() => {
-        if (state.success && state.user) {
-            setSuccess(state.message || "Profile updated successfully!")
-            setError("")
-            refreshUser()
-            setFormData({
-                first_name: state.user.first_name,
-                last_name: state.user.last_name,
-                email: state.user.email,
-            })
-        } else if (state.error) {
-            setError(state.error)
-            setSuccess("")
+        if (state.success) {
+            setIsEditing(false)
+            auth.refreshUser() // Refresh user in context, which will trigger the effect above to update formData
         }
-    }, [state, refreshUser])
+        // Only run when state.success changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.success])
 
-    if (!user) {
-        return null
-    }
+    if (!auth.user) return null
 
     return (
         <div className="mx-auto w-full max-w-2xl">
@@ -105,15 +121,15 @@ export function UserProfile() {
                     </button>
                 </div>
 
-                {error && (
+                {state.error && (
                     <div className="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
-                        {error}
+                        {state.error}
                     </div>
                 )}
 
-                {success && (
+                {state.success && state.message && (
                     <div className="mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700">
-                        {success}
+                        {state.message}
                     </div>
                 )}
 
@@ -124,20 +140,24 @@ export function UserProfile() {
                                 <label className="mb-2 block text-sm font-bold text-gray-700">
                                     Username
                                 </label>
-                                <p className="text-gray-900">{user.username}</p>
+                                <p className="text-gray-900">
+                                    {auth.user.username}
+                                </p>
                             </div>
                             <div>
                                 <label className="mb-2 block text-sm font-bold text-gray-700">
                                     Email
                                 </label>
-                                <p className="text-gray-900">{user.email}</p>
+                                <p className="text-gray-900">
+                                    {auth.user.email}
+                                </p>
                             </div>
                             <div>
                                 <label className="mb-2 block text-sm font-bold text-gray-700">
                                     First Name
                                 </label>
                                 <p className="text-gray-900">
-                                    {user.first_name || "Not set"}
+                                    {auth.user.first_name || "Not set"}
                                 </p>
                             </div>
                             <div>
@@ -145,7 +165,7 @@ export function UserProfile() {
                                     Last Name
                                 </label>
                                 <p className="text-gray-900">
-                                    {user.last_name || "Not set"}
+                                    {auth.user.last_name || "Not set"}
                                 </p>
                             </div>
                             <div>
@@ -154,7 +174,7 @@ export function UserProfile() {
                                 </label>
                                 <p className="text-gray-900">
                                     {new Date(
-                                        user.date_joined,
+                                        auth.user.date_joined,
                                     ).toLocaleDateString("en-US", {
                                         year: "numeric",
                                         month: "long",
@@ -167,14 +187,21 @@ export function UserProfile() {
                                     Status
                                 </label>
                                 <p className="text-gray-900">
-                                    {user.is_staff ? "Staff" : "Member"}
+                                    {auth.user.is_staff ? "Staff" : "Member"}
                                 </p>
                             </div>
                         </div>
 
                         <div className="mt-6 flex justify-end">
                             <button
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => {
+                                    setIsEditing(true)
+                                    // Reset form action state when entering edit mode
+                                    // This is a simple way to clear previous errors/success messages
+                                    // A more sophisticated approach might involve a dedicated reset function for the action state
+                                    // Or simply rely on the user submitting the form again to clear.
+                                    // For now, we can clear local success/error messages if they were separate from useActionState
+                                }}
                                 className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none"
                             >
                                 Edit Profile
@@ -182,7 +209,7 @@ export function UserProfile() {
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleFormSubmit}>
+                    <form action={formAction} className="space-y-4">
                         <div className="mb-4 grid grid-cols-2 gap-4">
                             <div>
                                 <label
@@ -197,8 +224,9 @@ export function UserProfile() {
                                     name="first_name"
                                     type="text"
                                     placeholder="First Name"
-                                    value={formData.first_name}
+                                    value={formData.first_name || ""}
                                     onChange={handleChange}
+                                    disabled={isPending}
                                 />
                             </div>
                             <div>
@@ -214,8 +242,9 @@ export function UserProfile() {
                                     name="last_name"
                                     type="text"
                                     placeholder="Last Name"
-                                    value={formData.last_name}
+                                    value={formData.last_name || ""}
                                     onChange={handleChange}
+                                    disabled={isPending}
                                 />
                             </div>
                         </div>
@@ -232,9 +261,10 @@ export function UserProfile() {
                                 name="email"
                                 type="email"
                                 placeholder="Email"
-                                value={formData.email}
+                                value={formData.email || ""}
                                 onChange={handleChange}
                                 required
+                                disabled={isPending}
                             />
                         </div>
                         <div className="flex justify-end space-x-4">
@@ -242,10 +272,20 @@ export function UserProfile() {
                                 type="button"
                                 onClick={() => {
                                     setIsEditing(false)
-                                    setError("")
-                                    setSuccess("")
+                                    // Reset form data to current user state when cancelling
+                                    if (auth.user) {
+                                        setFormData({
+                                            first_name:
+                                                auth.user.first_name || "",
+                                            last_name:
+                                                auth.user.last_name || "",
+                                            email: auth.user.email || "",
+                                        })
+                                    }
+                                    // Consider resetting action state here as well if needed
                                 }}
                                 className="focus:shadow-outline rounded bg-gray-500 px-4 py-2 font-bold text-white hover:bg-gray-700 focus:outline-none"
+                                disabled={isPending}
                             >
                                 Cancel
                             </button>

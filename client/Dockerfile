@@ -1,25 +1,21 @@
-FROM node:24-alpine AS base
-
-# Install dependencies
-FROM base AS deps
+FROM node:24-alpine AS development-dependencies-env
+COPY . /app
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm install --frozen-lockfile
+RUN npm ci
 
-# Build the app
-FROM base AS builder
+FROM node:24-alpine AS production-dependencies-env
+COPY ./package.json package-lock.json /app/
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+RUN npm ci --omit=dev
+
+FROM node:24-alpine AS build-env
+COPY . /app/
+COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+WORKDIR /app
 RUN npm run build
 
-# Production server
-FROM base AS runner
+FROM node:24-alpine
+COPY ./package.json package-lock.json /app/
+COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=build-env /app/build /app/build
 WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-EXPOSE 3000
-CMD ["node", "server.js"]

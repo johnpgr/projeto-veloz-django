@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from "react-router"
 
 export default function AuthPage() {
     return (
@@ -9,17 +9,17 @@ export default function AuthPage() {
                 </h1>
                 <div className="flex justify-center mb-8">
                     <div className="bg-white rounded-lg p-1 shadow-md flex gap-2">
-                        <Link href="/auth/login">
+                        <Link to="/auth/login">
                             <button className="px-6 py-2 rounded-md font-medium transition-colors bg-blue-500 text-white">
                                 Login
                             </button>
                         </Link>
-                        <Link href="/auth/register">
+                        <Link to="/auth/register">
                             <button className="px-6 py-2 rounded-md font-medium transition-colors bg-green-500 text-white">
                                 Register
                             </button>
                         </Link>
-                        <Link href="/auth/profile">
+                        <Link to="/auth/profile">
                             <button className="px-6 py-2 rounded-md font-medium transition-colors bg-gray-700 text-white">
                                 Profile
                             </button>

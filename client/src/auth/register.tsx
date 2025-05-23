@@ -1,4 +1,12 @@
-import { RegisterForm } from '../../components/RegisterForm'
+import { AuthAPI } from '~/lib/auth'
+import { RegisterForm } from '../components/RegisterForm'
+import { redirect } from 'react-router'
+
+export function clientLoader() {
+    if (AuthAPI.isAuthenticated()) {
+        return redirect("/auth/profile")
+    }
+}
 
 export default function RegisterPage() {
     return (

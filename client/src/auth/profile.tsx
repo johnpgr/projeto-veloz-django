@@ -1,6 +1,12 @@
-// Profile page for JWT Auth Demo
-'use client'
-import { UserProfile } from '../../components/UserProfile'
+import { UserProfile } from '../components/UserProfile'
+import { AuthAPI } from "~/lib/auth"
+import { redirect } from "react-router"
+
+export function clientLoader() {
+    if (!AuthAPI.isAuthenticated()) {
+        return redirect("/auth/login")
+    }
+}
 
 export default function ProfilePage() {
     return (
